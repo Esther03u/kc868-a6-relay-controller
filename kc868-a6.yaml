@@ -1,0 +1,587 @@
+########################################################################
+# KinCony KC868-A6 — 6-Relay MQTT Controller
+#
+# - Board:     KinCony KC868-A6 (ESP32, PCF8574 I/O expander, RTC)
+# - Framework: ESPHome (esp-idf)
+# - Control:   MQTT (ON / OFF / TOGGLE) + per-relay ON/OFF time schedule
+#
+# Pin map source: https://devices.esphome.io/devices/kincony-kc868-a6/
+#
+# MQTT broker: using the public test.mosquitto.org broker (no login needed
+# on port 1883). It's unauthenticated and shared by anyone in the world,
+# so mqtt_prefix below MUST stay unique — do not shorten it to something
+# generic like "kc868-a6" or strangers on the broker could control your
+# relays. Switch to a private broker later by changing mqtt_broker in
+# secrets.yaml (see docker-compose.yml for a ready-to-run private option).
+#
+# Commands — one topic per relay per action, payload mostly ignored
+# (send any payload, e.g. "1") except where noted:
+#   ${mqtt_prefix}/cmd/relay/<n>/toggle
+#   ${mqtt_prefix}/cmd/relay/<n>/on
+#   ${mqtt_prefix}/cmd/relay/<n>/off
+#   ${mqtt_prefix}/cmd/relay/<n>/on_time      payload = minutes since midnight, e.g. "420"
+#   ${mqtt_prefix}/cmd/relay/<n>/off_time     payload = minutes since midnight
+#   ${mqtt_prefix}/cmd/relay/<n>/sched_enable payload = "ON" / "OFF"
+#
+# States — mirrors the command topics under state/, retained:
+#   ${mqtt_prefix}/state/relay/<n>/status        "ON" / "OFF"
+#   ${mqtt_prefix}/state/relay/<n>/on_time
+#   ${mqtt_prefix}/state/relay/<n>/off_time
+#   ${mqtt_prefix}/state/relay/<n>/sched_enable  "ON" / "OFF"
+#   ${mqtt_prefix}/status                        "online" / "offline"
+########################################################################
+
+substitutions:
+  mqtt_prefix: "pkru/19_04_10_28"
+
+esphome:
+  name: kc868-a6
+  friendly_name: "KC868-A6 Relay Controller"
+  comment: "6-channel MQTT relay controller (KinCony KC868-A6)"
+
+esp32:
+  variant: esp32
+  framework:
+    type: esp-idf
+
+# --------------------------------------------------------------------
+# Networking
+# --------------------------------------------------------------------
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  # Fallback hotspot if WiFi connection fails, so the board is always reachable
+  ap:
+    ssid: "KC868-A6 Fallback"
+    password: !secret ap_fallback_password
+
+captive_portal:
+
+logger:
+  level: INFO
+
+# Native ESPHome API (Home Assistant) — optional but handy for debugging
+api:
+  encryption:
+    key: !secret encryption_key
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+# Built-in web UI on the board itself (http://kc868-a6.local) — quick fallback
+# dashboard in addition to the custom PWA dashboard in /dashboard.
+web_server:
+  port: 80
+  version: 3
+
+# --------------------------------------------------------------------
+# MQTT — this is the core control channel (requirement 1)
+# --------------------------------------------------------------------
+mqtt:
+  broker: !secret mqtt_broker
+  port: 1883
+  # test.mosquitto.org's plain port 1883 is unauthenticated, so no
+  # username/password here. If you switch to a private/authenticated
+  # broker later, add them back:
+  #   username: !secret mqtt_username
+  #   password: !secret mqtt_password
+  topic_prefix: ${mqtt_prefix}
+  discovery: false
+  # Publish every state change as a retained message so dashboards/apps
+  # immediately see the correct status on connect/reload.
+  birth_message:
+    topic: ${mqtt_prefix}/status
+    payload: online
+    retain: true
+  will_message:
+    topic: ${mqtt_prefix}/status
+    payload: offline
+    retain: true
+  shutdown_message:
+    topic: ${mqtt_prefix}/status
+    payload: offline
+    retain: true
+  # One command topic per relay per action — see the header comment above
+  # for the full list. Each relay repeats the same six triggers.
+  on_message:
+    - topic: ${mqtt_prefix}/cmd/relay/1/toggle
+      then:
+        - switch.toggle: relay_1
+    - topic: ${mqtt_prefix}/cmd/relay/1/on
+      then:
+        - switch.turn_on: relay_1
+    - topic: ${mqtt_prefix}/cmd/relay/1/off
+      then:
+        - switch.turn_off: relay_1
+    - topic: ${mqtt_prefix}/cmd/relay/1/on_time
+      then:
+        - number.set:
+            id: on_time_1
+            value: !lambda 'return parse_number<int>(x).value_or(-1);'
+    - topic: ${mqtt_prefix}/cmd/relay/1/off_time
+      then:
+        - number.set:
+            id: off_time_1
+            value: !lambda 'return parse_number<int>(x).value_or(-1);'
+    - topic: ${mqtt_prefix}/cmd/relay/1/sched_enable
+      then:
+        - if:
+            condition:
+              lambda: 'return x == "ON";'
+            then:
+              - switch.turn_on: sched_enable_1
+            else:
+              - switch.turn_off: sched_enable_1
+
+    - topic: ${mqtt_prefix}/cmd/relay/2/toggle
+      then:
+        - switch.toggle: relay_2
+    - topic: ${mqtt_prefix}/cmd/relay/2/on
+      then:
+        - switch.turn_on: relay_2
+    - topic: ${mqtt_prefix}/cmd/relay/2/off
+      then:
+        - switch.turn_off: relay_2
+    - topic: ${mqtt_prefix}/cmd/relay/2/on_time
+      then:
+        - number.set:
+            id: on_time_2
+            value: !lambda 'return parse_number<int>(x).value_or(-1);'
+    - topic: ${mqtt_prefix}/cmd/relay/2/off_time
+      then:
+        - number.set:
+            id: off_time_2
+            value: !lambda 'return parse_number<int>(x).value_or(-1);'
+    - topic: ${mqtt_prefix}/cmd/relay/2/sched_enable
+      then:
+        - if:
+            condition:
+              lambda: 'return x == "ON";'
+            then:
+              - switch.turn_on: sched_enable_2
+            else:
+              - switch.turn_off: sched_enable_2
+
+    - topic: ${mqtt_prefix}/cmd/relay/3/toggle
+      then:
+        - switch.toggle: relay_3
+    - topic: ${mqtt_prefix}/cmd/relay/3/on
+      then:
+        - switch.turn_on: relay_3
+    - topic: ${mqtt_prefix}/cmd/relay/3/off
+      then:
+        - switch.turn_off: relay_3
+    - topic: ${mqtt_prefix}/cmd/relay/3/on_time
+      then:
+        - number.set:
+            id: on_time_3
+            value: !lambda 'return parse_number<int>(x).value_or(-1);'
+    - topic: ${mqtt_prefix}/cmd/relay/3/off_time
+      then:
+        - number.set:
+            id: off_time_3
+            value: !lambda 'return parse_number<int>(x).value_or(-1);'
+    - topic: ${mqtt_prefix}/cmd/relay/3/sched_enable
+      then:
+        - if:
+            condition:
+              lambda: 'return x == "ON";'
+            then:
+              - switch.turn_on: sched_enable_3
+            else:
+              - switch.turn_off: sched_enable_3
+
+    - topic: ${mqtt_prefix}/cmd/relay/4/toggle
+      then:
+        - switch.toggle: relay_4
+    - topic: ${mqtt_prefix}/cmd/relay/4/on
+      then:
+        - switch.turn_on: relay_4
+    - topic: ${mqtt_prefix}/cmd/relay/4/off
+      then:
+        - switch.turn_off: relay_4
+    - topic: ${mqtt_prefix}/cmd/relay/4/on_time
+      then:
+        - number.set:
+            id: on_time_4
+            value: !lambda 'return parse_number<int>(x).value_or(-1);'
+    - topic: ${mqtt_prefix}/cmd/relay/4/off_time
+      then:
+        - number.set:
+            id: off_time_4
+            value: !lambda 'return parse_number<int>(x).value_or(-1);'
+    - topic: ${mqtt_prefix}/cmd/relay/4/sched_enable
+      then:
+        - if:
+            condition:
+              lambda: 'return x == "ON";'
+            then:
+              - switch.turn_on: sched_enable_4
+            else:
+              - switch.turn_off: sched_enable_4
+
+    - topic: ${mqtt_prefix}/cmd/relay/5/toggle
+      then:
+        - switch.toggle: relay_5
+    - topic: ${mqtt_prefix}/cmd/relay/5/on
+      then:
+        - switch.turn_on: relay_5
+    - topic: ${mqtt_prefix}/cmd/relay/5/off
+      then:
+        - switch.turn_off: relay_5
+    - topic: ${mqtt_prefix}/cmd/relay/5/on_time
+      then:
+        - number.set:
+            id: on_time_5
+            value: !lambda 'return parse_number<int>(x).value_or(-1);'
+    - topic: ${mqtt_prefix}/cmd/relay/5/off_time
+      then:
+        - number.set:
+            id: off_time_5
+            value: !lambda 'return parse_number<int>(x).value_or(-1);'
+    - topic: ${mqtt_prefix}/cmd/relay/5/sched_enable
+      then:
+        - if:
+            condition:
+              lambda: 'return x == "ON";'
+            then:
+              - switch.turn_on: sched_enable_5
+            else:
+              - switch.turn_off: sched_enable_5
+
+    - topic: ${mqtt_prefix}/cmd/relay/6/toggle
+      then:
+        - switch.toggle: relay_6
+    - topic: ${mqtt_prefix}/cmd/relay/6/on
+      then:
+        - switch.turn_on: relay_6
+    - topic: ${mqtt_prefix}/cmd/relay/6/off
+      then:
+        - switch.turn_off: relay_6
+    - topic: ${mqtt_prefix}/cmd/relay/6/on_time
+      then:
+        - number.set:
+            id: on_time_6
+            value: !lambda 'return parse_number<int>(x).value_or(-1);'
+    - topic: ${mqtt_prefix}/cmd/relay/6/off_time
+      then:
+        - number.set:
+            id: off_time_6
+            value: !lambda 'return parse_number<int>(x).value_or(-1);'
+    - topic: ${mqtt_prefix}/cmd/relay/6/sched_enable
+      then:
+        - if:
+            condition:
+              lambda: 'return x == "ON";'
+            then:
+              - switch.turn_on: sched_enable_6
+            else:
+              - switch.turn_off: sched_enable_6
+
+# --------------------------------------------------------------------
+# Time — needed for the scheduling feature
+# --------------------------------------------------------------------
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: "Asia/Bangkok"
+
+# --------------------------------------------------------------------
+# Buses (from official KC868-A6 pin map)
+# --------------------------------------------------------------------
+i2c:
+  sda: GPIO4
+  scl:
+    number: GPIO15
+    ignore_strapping_warning: true
+
+uart:
+  - id: rs485
+    tx_pin: GPIO27
+    rx_pin: GPIO14
+    baud_rate: 9600
+  - id: rs232
+    tx_pin: GPIO17
+    rx_pin: GPIO16
+    baud_rate: 9600
+
+pcf8574:
+  - id: inputs
+    address: 0x22
+  - id: outputs
+    address: 0x24
+
+# --------------------------------------------------------------------
+# Digital inputs (6 dry-contact inputs on the board)
+# --------------------------------------------------------------------
+binary_sensor:
+  - platform: gpio
+    name: "Input 1"
+    pin: { pcf8574: inputs, number: 0, mode: INPUT, inverted: true }
+  - platform: gpio
+    name: "Input 2"
+    pin: { pcf8574: inputs, number: 1, mode: INPUT, inverted: true }
+  - platform: gpio
+    name: "Input 3"
+    pin: { pcf8574: inputs, number: 2, mode: INPUT, inverted: true }
+  - platform: gpio
+    name: "Input 4"
+    pin: { pcf8574: inputs, number: 3, mode: INPUT, inverted: true }
+  - platform: gpio
+    name: "Input 5"
+    pin: { pcf8574: inputs, number: 4, mode: INPUT, inverted: true }
+  - platform: gpio
+    name: "Input 6"
+    pin: { pcf8574: inputs, number: 5, mode: INPUT, inverted: true }
+
+# --------------------------------------------------------------------
+# Relays — requirement 1 (MQTT on/off) + bonus 2 (toggle).
+# Controlled via ${mqtt_prefix}/cmd/relay/<n>/{toggle,on,off} (see mqtt.on_message
+# above). state_topic below overrides ESPHome's default per-entity topic so
+# status publishes to ${mqtt_prefix}/state/relay/<n>/status instead.
+# --------------------------------------------------------------------
+switch:
+  - platform: gpio
+    name: "Relay 1"
+    id: relay_1
+    pin: { pcf8574: outputs, number: 0, mode: OUTPUT, inverted: true }
+    restore_mode: RESTORE_DEFAULT_OFF
+    state_topic: ${mqtt_prefix}/state/relay/1/status
+  - platform: gpio
+    name: "Relay 2"
+    id: relay_2
+    pin: { pcf8574: outputs, number: 1, mode: OUTPUT, inverted: true }
+    restore_mode: RESTORE_DEFAULT_OFF
+    state_topic: ${mqtt_prefix}/state/relay/2/status
+  - platform: gpio
+    name: "Relay 3"
+    id: relay_3
+    pin: { pcf8574: outputs, number: 2, mode: OUTPUT, inverted: true }
+    restore_mode: RESTORE_DEFAULT_OFF
+    state_topic: ${mqtt_prefix}/state/relay/3/status
+  - platform: gpio
+    name: "Relay 4"
+    id: relay_4
+    pin: { pcf8574: outputs, number: 3, mode: OUTPUT, inverted: true }
+    restore_mode: RESTORE_DEFAULT_OFF
+    state_topic: ${mqtt_prefix}/state/relay/4/status
+  - platform: gpio
+    name: "Relay 5"
+    id: relay_5
+    pin: { pcf8574: outputs, number: 4, mode: OUTPUT, inverted: true }
+    restore_mode: RESTORE_DEFAULT_OFF
+    state_topic: ${mqtt_prefix}/state/relay/5/status
+  - platform: gpio
+    name: "Relay 6"
+    id: relay_6
+    pin: { pcf8574: outputs, number: 5, mode: OUTPUT, inverted: true }
+    restore_mode: RESTORE_DEFAULT_OFF
+    state_topic: ${mqtt_prefix}/state/relay/6/status
+
+  # Per-relay "schedule enabled" toggle (bonus 1). Controlled via
+  # ${mqtt_prefix}/cmd/relay/<n>/sched_enable, state mirrored to
+  # ${mqtt_prefix}/state/relay/<n>/sched_enable.
+  - platform: template
+    name: "Relay 1 Schedule Enable"
+    id: sched_enable_1
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    state_topic: ${mqtt_prefix}/state/relay/1/sched_enable
+  - platform: template
+    name: "Relay 2 Schedule Enable"
+    id: sched_enable_2
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    state_topic: ${mqtt_prefix}/state/relay/2/sched_enable
+  - platform: template
+    name: "Relay 3 Schedule Enable"
+    id: sched_enable_3
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    state_topic: ${mqtt_prefix}/state/relay/3/sched_enable
+  - platform: template
+    name: "Relay 4 Schedule Enable"
+    id: sched_enable_4
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    state_topic: ${mqtt_prefix}/state/relay/4/sched_enable
+  - platform: template
+    name: "Relay 5 Schedule Enable"
+    id: sched_enable_5
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    state_topic: ${mqtt_prefix}/state/relay/5/sched_enable
+  - platform: template
+    name: "Relay 6 Schedule Enable"
+    id: sched_enable_6
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    state_topic: ${mqtt_prefix}/state/relay/6/sched_enable
+
+# --------------------------------------------------------------------
+# Per-relay ON/OFF schedule times (bonus 1) — stored as "minutes since
+# midnight" (0-1439). -1 disables that edge. Settable from the web
+# dashboard / mobile app via:
+#   ${mqtt_prefix}/cmd/relay/<n>/on_time   <-- e.g. "420"  (07:00)
+#   ${mqtt_prefix}/cmd/relay/<n>/off_time  <-- e.g. "1080" (18:00)
+# state_topic overrides publish to ${mqtt_prefix}/state/relay/<n>/on_time
+# and .../off_time instead of ESPHome's default per-entity topic.
+# --------------------------------------------------------------------
+number:
+  - platform: template
+    name: "Relay 1 On Time"
+    id: on_time_1
+    min_value: -1
+    max_value: 1439
+    step: 1
+    initial_value: -1
+    optimistic: true
+    restore_value: true
+    state_topic: ${mqtt_prefix}/state/relay/1/on_time
+  - platform: template
+    name: "Relay 1 Off Time"
+    id: off_time_1
+    min_value: -1
+    max_value: 1439
+    step: 1
+    initial_value: -1
+    optimistic: true
+    restore_value: true
+    state_topic: ${mqtt_prefix}/state/relay/1/off_time
+
+  - platform: template
+    name: "Relay 2 On Time"
+    id: on_time_2
+    min_value: -1
+    max_value: 1439
+    step: 1
+    initial_value: -1
+    optimistic: true
+    restore_value: true
+    state_topic: ${mqtt_prefix}/state/relay/2/on_time
+  - platform: template
+    name: "Relay 2 Off Time"
+    id: off_time_2
+    min_value: -1
+    max_value: 1439
+    step: 1
+    initial_value: -1
+    optimistic: true
+    restore_value: true
+    state_topic: ${mqtt_prefix}/state/relay/2/off_time
+
+  - platform: template
+    name: "Relay 3 On Time"
+    id: on_time_3
+    min_value: -1
+    max_value: 1439
+    step: 1
+    initial_value: -1
+    optimistic: true
+    restore_value: true
+    state_topic: ${mqtt_prefix}/state/relay/3/on_time
+  - platform: template
+    name: "Relay 3 Off Time"
+    id: off_time_3
+    min_value: -1
+    max_value: 1439
+    step: 1
+    initial_value: -1
+    optimistic: true
+    restore_value: true
+    state_topic: ${mqtt_prefix}/state/relay/3/off_time
+
+  - platform: template
+    name: "Relay 4 On Time"
+    id: on_time_4
+    min_value: -1
+    max_value: 1439
+    step: 1
+    initial_value: -1
+    optimistic: true
+    restore_value: true
+    state_topic: ${mqtt_prefix}/state/relay/4/on_time
+  - platform: template
+    name: "Relay 4 Off Time"
+    id: off_time_4
+    min_value: -1
+    max_value: 1439
+    step: 1
+    initial_value: -1
+    optimistic: true
+    restore_value: true
+    state_topic: ${mqtt_prefix}/state/relay/4/off_time
+
+  - platform: template
+    name: "Relay 5 On Time"
+    id: on_time_5
+    min_value: -1
+    max_value: 1439
+    step: 1
+    initial_value: -1
+    optimistic: true
+    restore_value: true
+    state_topic: ${mqtt_prefix}/state/relay/5/on_time
+  - platform: template
+    name: "Relay 5 Off Time"
+    id: off_time_5
+    min_value: -1
+    max_value: 1439
+    step: 1
+    initial_value: -1
+    optimistic: true
+    restore_value: true
+    state_topic: ${mqtt_prefix}/state/relay/5/off_time
+
+  - platform: template
+    name: "Relay 6 On Time"
+    id: on_time_6
+    min_value: -1
+    max_value: 1439
+    step: 1
+    initial_value: -1
+    optimistic: true
+    restore_value: true
+    state_topic: ${mqtt_prefix}/state/relay/6/on_time
+  - platform: template
+    name: "Relay 6 Off Time"
+    id: off_time_6
+    min_value: -1
+    max_value: 1439
+    step: 1
+    initial_value: -1
+    optimistic: true
+    restore_value: true
+    state_topic: ${mqtt_prefix}/state/relay/6/off_time
+
+# --------------------------------------------------------------------
+# Scheduler — checks every 30s whether "now" matches a configured
+# on/off minute-of-day for each relay whose schedule is enabled.
+# --------------------------------------------------------------------
+interval:
+  - interval: 30s
+    then:
+      - lambda: |-
+          if (!id(sntp_time).now().is_valid()) return;
+          auto now = id(sntp_time).now();
+          int minutes = now.hour * 60 + now.minute;
+
+          struct Ch { switch_::Switch *relay; switch_::Switch *enable;
+                      number::Number *on_t; number::Number *off_t; };
+          Ch channels[6] = {
+            { id(relay_1), id(sched_enable_1), id(on_time_1), id(off_time_1) },
+            { id(relay_2), id(sched_enable_2), id(on_time_2), id(off_time_2) },
+            { id(relay_3), id(sched_enable_3), id(on_time_3), id(off_time_3) },
+            { id(relay_4), id(sched_enable_4), id(on_time_4), id(off_time_4) },
+            { id(relay_5), id(sched_enable_5), id(on_time_5), id(off_time_5) },
+            { id(relay_6), id(sched_enable_6), id(on_time_6), id(off_time_6) },
+          };
+
+          for (auto &c : channels) {
+            if (!c.enable->state) continue;
+            int on_m = (int) c.on_t->state;
+            int off_m = (int) c.off_t->state;
+            if (on_m >= 0 && minutes == on_m && !c.relay->state) c.relay->turn_on();
+            if (off_m >= 0 && minutes == off_m && c.relay->state) c.relay->turn_off();
+          }

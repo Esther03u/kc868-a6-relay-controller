@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>KC868-A6 Relay Control</title>
+<meta name="theme-color" content="#060714" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="icon.svg" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.10.1/mqtt.min.js" integrity="sha512-pR8nd38GU+Btc396OiF2bVNDPxdLVgqA1K/roVBR13m4nVsFmjyIopjsVzncTgmczisiimSFLYpBK+dclsL7uw==" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg-0: #060714;
+    --bg-1: #0d1130;
+    --glow-a: #6d28d9;
+    --glow-b: #0891b2;
+    --card-bg: rgba(255, 255, 255, 0.045);
+    --card-bg-hover: rgba(255, 255, 255, 0.065);
+    --card-border: rgba(255, 255, 255, 0.10);
+    --card-border-hover: rgba(255, 255, 255, 0.20);
+    --text: #eef1fb;
+    --muted: #9298c2;
+    --on: #34d399;
+    --on-glow: rgba(52, 211, 153, 0.55);
+    --off: #4b5170;
+    --accent: #818cf8;
+    --accent-2: #22d3ee;
+    --danger: #f87171;
+    --danger-glow: rgba(248, 113, 113, 0.5);
+    --font-display: "Space Grotesk", sans-serif;
+    --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    font-family: var(--font-body);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 48px;
+    background: var(--bg-0);
+    position: relative;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: -20%;
+    z-index: -1;
+    background:
+      radial-gradient(38% 32% at 12% 8%, color-mix(in srgb, var(--glow-a) 55%, transparent), transparent 70%),
+      radial-gradient(42% 38% at 92% 18%, color-mix(in srgb, var(--glow-b) 45%, transparent), transparent 70%),
+      radial-gradient(55% 45% at 50% 105%, color-mix(in srgb, var(--glow-a) 35%, transparent), transparent 70%),
+      linear-gradient(160deg, var(--bg-0), var(--bg-1) 55%, var(--bg-0));
+    animation: drift 24s ease-in-out infinite alternate;
+  }
+  @keyframes drift {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to { transform: translate3d(-2%, 1.5%, 0) scale(1.04); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    body::before { animation: none; }
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
+
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    padding: 18px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1100px;
+    margin: 0 auto;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-badge {
+    width: 38px; height: 38px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow: 0 6px 18px -4px color-mix(in srgb, var(--accent) 70%, transparent);
+  }
+  .brand-text h1 {
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: 0.01em;
+    line-height: 1.15;
+  }
+  .brand-sub {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+  }
+
+  .header-actions { display: flex; align-items: center; gap: 10px; }
+  #conn {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    padding: 5px 12px 5px 9px;
+    border-radius: 999px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    color: var(--muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  #conn::before {
+    content: "";
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--off);
+  }
+  #conn.connected { color: var(--on); border-color: color-mix(in srgb, var(--on) 40%, var(--card-border)); }
+  #conn.connected::before { background: var(--on); box-shadow: 0 0 8px var(--on-glow); }
+  #conn.error { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 40%, var(--card-border)); }
+  #conn.error::before { background: var(--danger); box-shadow: 0 0 8px var(--danger-glow); }
+
+  .icon-btn {
+    width: 38px; height: 38px;
+    border-radius: 11px;
+    border: 1px solid var(--card-border);
+    background: var(--card-bg);
+    color: var(--text);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s, border-color .15s, transform .15s;
+  }
+  .icon-btn:hover { background: var(--card-bg-hover); border-color: var(--card-border-hover); }
+  .icon-btn:active { transform: scale(0.92); }
+  .icon-btn.small { width: 28px; height: 28px; font-size: 12px; border-radius: 8px; }
+
+  .settings-panel {
+    position: fixed;
+    top: 68px;
+    right: 16px;
+    z-index: 30;
+    width: min(310px, calc(100vw - 32px));
+  }
+  .settings-panel[hidden] { display: none; }
+  .settings-panel-inner {
+    background: rgba(15, 18, 40, 0.85);
+    border: 1px solid var(--card-border-hover);
+    border-radius: 16px;
+    padding: 16px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.6);
+    animation: pop-in .16s ease-out;
+  }
+  @keyframes pop-in {
+    from { opacity: 0; transform: translateY(-6px) scale(.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .settings-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .settings-head h3 {
+    font-family: var(--font-display);
+    font-size: 14px;
+    margin: 0;
+    font-weight: 600;
+  }
+  .field { display: block; margin-bottom: 10px; }
+  .field span {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .field input {
+    width: 100%;
+    padding: 9px 11px;
+    border-radius: 9px;
+    border: 1px solid var(--card-border);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+    font-size: 13px;
+    font-family: var(--font-mono);
+  }
+  .field input:focus,
+  input:focus-visible,
+  button:focus-visible,
+  .icon-btn:focus-visible {
+    outline: 2px solid var(--accent-2);
+    outline-offset: 2px;
+  }
+  #connect-btn {
+    width: 100%;
+    padding: 10px 0;
+    border-radius: 9px;
+    border: none;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #0a0c1c;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: filter .15s, transform .1s;
+  }
+  #connect-btn:hover { filter: brightness(1.08); }
+  #connect-btn:active { transform: scale(0.98); }
+  .settings-hint { font-size: 11px; color: var(--muted); margin: 10px 0 0; line-height: 1.5; }
+  .settings-hint code {
+    background: rgba(255, 255, 255, 0.08);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 16px;
+    max-width: 1100px;
+    margin: 8px auto 0;
+    padding: 8px 16px 0;
+  }
+  .card {
+    position: relative;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    padding: 18px 18px 16px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    overflow: hidden;
+    transition: border-color .2s, background .2s;
+  }
+  .card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 16px; right: 16px;
+    height: 2px;
+    border-radius: 0 0 4px 4px;
+    background: var(--off);
+    opacity: .5;
+    transition: background .25s, opacity .25s, box-shadow .25s;
+  }
+  .card.is-on::before {
+    background: linear-gradient(90deg, var(--on), var(--accent-2));
+    opacity: 1;
+    box-shadow: 0 0 12px var(--on-glow);
+  }
+  .card:hover { border-color: var(--card-border-hover); }
+
+  .card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .card-id {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .relay-num {
+    width: 30px; height: 30px;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--card-border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .card-top h2 { font-family: var(--font-display); font-size: 15px; margin: 0; font-weight: 600; }
+  .status-wrap { display: flex; align-items: center; gap: 6px; }
+  .status-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .status-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--off);
+    box-shadow: 0 0 0 rgba(52, 197, 94, 0);
+    transition: all .2s;
+  }
+  .status-dot.on { background: var(--on); box-shadow: 0 0 10px var(--on-glow); }
+
+  .btn-row { display: flex; gap: 8px; margin-bottom: 16px; }
+  .btn-row button {
+    flex: 1;
+    padding: 11px 0;
+    border-radius: 11px;
+    border: 1px solid var(--card-border);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text);
+    font-size: 12px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: transform .1s, background .15s, border-color .15s;
+  }
+  .btn-row button:hover { border-color: var(--card-border-hover); }
+  .btn-row button:active { transform: scale(0.95); }
+  .btn-row button.on-btn:active { background: var(--on); border-color: var(--on); color: #062b12; }
+  .btn-row button.off-btn:active { background: var(--danger); border-color: var(--danger); color: #2b0606; }
+  .btn-row button.toggle-btn:active { background: var(--accent); border-color: var(--accent); color: #0a0c1c; }
+
+  .sched {
+    border-top: 1px solid var(--card-border);
+    padding-top: 13px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .sched-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+  .sched-row label { width: 58px; flex-shrink: 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .sched-row input[type="time"] {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 13px;
+    font-family: var(--font-mono);
+    color-scheme: dark;
+  }
+  .sched-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+  }
+  .switch { position: relative; width: 38px; height: 21px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; cursor: pointer; inset: 0;
+    background: var(--off); border-radius: 999px; transition: .2s;
+  }
+  .slider:before {
+    content: ""; position: absolute; height: 15px; width: 15px;
+    left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: .2s;
+  }
+  .switch input:checked + .slider { background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
+  .switch input:checked + .slider:before { transform: translateX(17px); }
+
+  .save-btn {
+    width: 100%; margin-top: 12px; padding: 9px 0;
+    border-radius: 9px; border: 1px solid var(--card-border);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text); font-size: 12px; font-weight: 600; cursor: pointer;
+    transition: background .15s, border-color .15s, transform .1s;
+  }
+  .save-btn:hover { background: rgba(255, 255, 255, 0.09); border-color: var(--card-border-hover); }
+  .save-btn:active { transform: scale(0.98); }
+
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    margin-top: 32px;
+    padding: 0 16px;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-badge">⚡</div>
+    <div class="brand-text">
+      <h1>KC868-A6</h1>
+      <span class="brand-sub">Relay Control</span>
+    </div>
+  </div>
+  <div class="header-actions">
+    <span id="conn">Disconnected</span>
+    <button id="settings-toggle" class="icon-btn" aria-label="Broker settings" aria-expanded="false">⚙</button>
+  </div>
+</header>
+
+<div id="settings-panel" class="settings-panel" hidden>
+  <div class="settings-panel-inner">
+    <div class="settings-head">
+      <h3>MQTT Broker</h3>
+      <button id="settings-close" class="icon-btn small" aria-label="Close settings">✕</button>
+    </div>
+    <label class="field">
+      <span>Host</span>
+      <input id="broker-host" placeholder="e.g. test.mosquitto.org" value="test.mosquitto.org" />
+    </label>
+    <label class="field">
+      <span>Port</span>
+      <input id="broker-port" placeholder="8080" value="8080" />
+    </label>
+    <button id="connect-btn">Connect</button>
+    <p class="settings-hint">Public broker over WebSocket · path <code>/mqtt</code></p>
+  </div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<footer>Topic prefix: pkru/19_04_10_28 &nbsp;•&nbsp; Add this page to your home screen to use it as a mobile app</footer>
+
+<script>
+const TOPIC_PREFIX = "pkru/19_04_10_28";
+const RELAY_COUNT = 6;
+let client = null;
+
+function publishCmd(relay, action, payload) {
+  client.publish(`${TOPIC_PREFIX}/cmd/relay/${relay}/${action}`, payload === undefined ? "1" : String(payload));
+}
+
+const PREFIX_RE = TOPIC_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const STATE_RE = {
+  relay: new RegExp(`^${PREFIX_RE}/state/relay/(\\d)/status$`),
+  onTime: new RegExp(`^${PREFIX_RE}/state/relay/(\\d)/on_time$`),
+  offTime: new RegExp(`^${PREFIX_RE}/state/relay/(\\d)/off_time$`),
+  schedEnable: new RegExp(`^${PREFIX_RE}/state/relay/(\\d)/sched_enable$`),
+};
+
+const grid = document.getElementById("grid");
+const connEl = document.getElementById("conn");
+const settingsPanel = document.getElementById("settings-panel");
+const settingsToggle = document.getElementById("settings-toggle");
+const settingsClose = document.getElementById("settings-close");
+
+function minutesToTime(m) {
+  if (m === null || m === undefined || m < 0) return "";
+  const h = Math.floor(m / 60).toString().padStart(2, "0");
+  const mi = (m % 60).toString().padStart(2, "0");
+  return `${h}:${mi}`;
+}
+function timeToMinutes(t) {
+  if (!t) return -1;
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+}
+
+function buildCard(i) {
+  const card = document.createElement("div");
+  card.className = "card";
+  card.id = `card-${i}`;
+  card.innerHTML = `
+    <div class="card-top">
+      <div class="card-id">
+        <div class="relay-num">${String(i).padStart(2, "0")}</div>
+        <h2>Relay ${i}</h2>
+      </div>
+      <div class="status-wrap">
+        <span class="status-label" id="status-label-${i}">OFF</span>
+        <div class="status-dot" id="dot-${i}"></div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="on-btn" data-i="${i}" data-action="ON">ON</button>
+      <button class="off-btn" data-i="${i}" data-action="OFF">OFF</button>
+      <button class="toggle-btn" data-i="${i}" data-action="TOGGLE">TOGGLE</button>
+    </div>
+    <div class="sched">
+      <div class="sched-row">
+        <label>On time</label>
+        <input type="time" id="on-${i}" />
+      </div>
+      <div class="sched-row">
+        <label>Off time</label>
+        <input type="time" id="off-${i}" />
+      </div>
+      <div class="sched-toggle">
+        <span>Enable schedule</span>
+        <label class="switch">
+          <input type="checkbox" id="sched-en-${i}" data-i="${i}" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <button class="save-btn" data-i="${i}">Save schedule</button>
+    </div>
+  `;
+  grid.appendChild(card);
+}
+for (let i = 1; i <= RELAY_COUNT; i++) buildCard(i);
+
+grid.addEventListener("click", (e) => {
+  const btn = e.target.closest("button");
+  if (!btn || !client || !client.connected) return;
+  const i = btn.dataset.i;
+  if (btn.classList.contains("save-btn")) {
+    const onM = timeToMinutes(document.getElementById(`on-${i}`).value);
+    const offM = timeToMinutes(document.getElementById(`off-${i}`).value);
+    publishCmd(i, "on_time", onM);
+    publishCmd(i, "off_time", offM);
+    return;
+  }
+  const action = btn.dataset.action.toLowerCase();
+  publishCmd(i, action);
+});
+
+grid.addEventListener("change", (e) => {
+  if (e.target.id && e.target.id.startsWith("sched-en-") && client && client.connected) {
+    const i = e.target.dataset.i;
+    publishCmd(i, "sched_enable", e.target.checked ? "ON" : "OFF");
+  }
+});
+
+function setConn(state, text) {
+  connEl.textContent = text;
+  connEl.className = state;
+}
+
+function openSettings() {
+  settingsPanel.hidden = false;
+  settingsToggle.setAttribute("aria-expanded", "true");
+}
+function closeSettings() {
+  settingsPanel.hidden = true;
+  settingsToggle.setAttribute("aria-expanded", "false");
+}
+settingsToggle.addEventListener("click", () => {
+  if (settingsPanel.hidden) openSettings(); else closeSettings();
+});
+settingsClose.addEventListener("click", closeSettings);
+document.addEventListener("click", (e) => {
+  if (settingsPanel.hidden) return;
+  if (settingsPanel.contains(e.target) || settingsToggle.contains(e.target)) return;
+  closeSettings();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeSettings();
+});
+
+function connect() {
+  const host = document.getElementById("broker-host").value.trim();
+  const port = document.getElementById("broker-port").value.trim() || "8080";
+  if (!host) { alert("กรอก MQTT broker host ก่อน"); return; }
+
+  localStorage.setItem("kc868_host", host);
+  localStorage.setItem("kc868_port", port);
+
+  if (client) { client.end(true); }
+
+  const url = `ws://${host}:${port}/mqtt`;
+  setConn("", "Connecting…");
+  client = mqtt.connect(url, {
+    reconnectPeriod: 3000,
+    connectTimeout: 8000,
+  });
+
+  client.on("connect", () => {
+    setConn("connected", "Connected");
+    client.subscribe(`${TOPIC_PREFIX}/#`);
+    closeSettings();
+  });
+  client.on("reconnect", () => setConn("", "Reconnecting…"));
+  client.on("close", () => setConn("", "Disconnected"));
+  client.on("error", (err) => { setConn("error", "Error"); console.error(err); });
+
+  client.on("message", (topic, payload) => {
+    const msg = payload.toString();
+    const relayMatch = topic.match(STATE_RE.relay);
+    if (relayMatch) {
+      const i = relayMatch[1];
+      const isOn = msg === "ON";
+      document.getElementById(`dot-${i}`).classList.toggle("on", isOn);
+      document.getElementById(`status-label-${i}`).textContent = isOn ? "ON" : "OFF";
+      document.getElementById(`card-${i}`).classList.toggle("is-on", isOn);
+      return;
+    }
+    const onTimeMatch = topic.match(STATE_RE.onTime);
+    if (onTimeMatch) {
+      document.getElementById(`on-${onTimeMatch[1]}`).value = minutesToTime(Number(msg));
+      return;
+    }
+    const offTimeMatch = topic.match(STATE_RE.offTime);
+    if (offTimeMatch) {
+      document.getElementById(`off-${offTimeMatch[1]}`).value = minutesToTime(Number(msg));
+      return;
+    }
+    const schedMatch = topic.match(STATE_RE.schedEnable);
+    if (schedMatch) {
+      document.getElementById(`sched-en-${schedMatch[1]}`).checked = msg === "ON";
+      return;
+    }
+  });
+}
+
+document.getElementById("connect-btn").addEventListener("click", connect);
+
+// Restore last-used connection settings and auto-connect
+window.addEventListener("load", () => {
+  const h = localStorage.getItem("kc868_host");
+  const p = localStorage.getItem("kc868_port");
+  if (h) document.getElementById("broker-host").value = h;
+  if (p) document.getElementById("broker-port").value = p;
+  if (h) {
+    connect();
+  } else {
+    openSettings();
+  }
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js").catch(console.error);
+  }
+});
+</script>
+</body>
+</html>

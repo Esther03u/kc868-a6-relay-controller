@@ -1,0 +1,19 @@
+version: "3.8"
+
+# Local MQTT broker for the KC868-A6 project.
+# Start with:  docker compose up -d
+# Then create a user (first run only):
+#   docker exec -it kc868-mosquitto mosquitto_passwd -c /mosquitto/config/passwd kc868
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: kc868-mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"   # MQTT for the ESP32 board
+      - "9001:9001"   # MQTT over WebSocket for the web/PWA dashboard
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
