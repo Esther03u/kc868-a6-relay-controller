@@ -224,6 +224,34 @@
     font-family: var(--font-mono);
   }
 
+  .master-row {
+    display: flex;
+    gap: 10px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 16px 4px;
+  }
+  .master-btn {
+    flex: 1;
+    padding: 12px 0;
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+    background: var(--card-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    color: var(--text);
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: transform .1s, border-color .15s, background .15s;
+  }
+  .master-btn:hover { border-color: var(--card-border-hover); }
+  .master-btn:active { transform: scale(0.97); }
+  .master-btn.on:active { background: var(--on); border-color: var(--on); color: #062b12; }
+  .master-btn.off:active { background: var(--danger); border-color: var(--danger); color: #2b0606; }
+
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
@@ -412,6 +440,11 @@
   </div>
 </div>
 
+<div class="master-row">
+  <button id="all-on-btn" class="master-btn on">เปิดทั้งหมด</button>
+  <button id="all-off-btn" class="master-btn off">ปิดทั้งหมด</button>
+</div>
+
 <div class="grid" id="grid"></div>
 
 <footer>Topic prefix: pkru/19_04_10_28 &nbsp;•&nbsp; Add this page to your home screen to use it as a mobile app</footer>
@@ -598,6 +631,15 @@ function connect() {
 }
 
 document.getElementById("connect-btn").addEventListener("click", connect);
+
+document.getElementById("all-on-btn").addEventListener("click", () => {
+  if (!client || !client.connected) return;
+  for (let i = 1; i <= RELAY_COUNT; i++) publishCmd(i, "on");
+});
+document.getElementById("all-off-btn").addEventListener("click", () => {
+  if (!client || !client.connected) return;
+  for (let i = 1; i <= RELAY_COUNT; i++) publishCmd(i, "off");
+});
 
 // Restore last-used connection settings and auto-connect
 window.addEventListener("load", () => {
