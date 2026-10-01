@@ -1,0 +1,2485 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Environment IoT Station — Realtime Air & Climate Telemetry</title>
+  <meta name="description" content="สถานีตรวจวัดสภาพอากาศและสิ่งแวดล้อมอัจฉริยะ (Smart Environment IoT Station) — รายงานคุณภาพอากาศ PM2.5, อุณหภูมิ, ความชื้น, แสงแดด, สภาพดิน และความกดอากาศแบบเรียลไทม์" />
+
+  <!-- Google Fonts: Outfit, Plus Jakarta Sans, Sarabun, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+  <style>
+    /* ==========================================================================
+       DESIGN TOKENS — Chic Neo-Aura Design System (Impeccable & Dynamic 6+ Cols)
+       ========================================================================== */
+    :root {
+      --bg-base: #070913;
+      --bg-mesh-1: rgba(99, 102, 241, 0.14);
+      --bg-mesh-2: rgba(6, 182, 212, 0.12);
+      --bg-mesh-3: rgba(244, 63, 94, 0.10);
+
+      --panel-bg: rgba(14, 20, 38, 0.72);
+      --panel-bg-solid: #0e1426;
+      --panel-border: rgba(255, 255, 255, 0.08);
+      --panel-border-hover: rgba(165, 180, 252, 0.25);
+      --panel-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5), 0 2px 10px rgba(0, 0, 0, 0.3);
+      --panel-shadow-hover: 0 20px 40px -10px rgba(0, 0, 0, 0.7), 0 0 24px rgba(99, 102, 241, 0.15);
+
+      --text-main: #f8fafc;
+      --text-sub: #cbd5e1;
+      --text-muted: #94a3b8;
+      --text-dim: #8b9bb4;
+
+      --primary-accent: #6366f1;
+      --primary-glow: rgba(99, 102, 241, 0.35);
+      --success-accent: #10b981;
+      --success-soft: rgba(16, 185, 129, 0.15);
+
+      --radius-sm: 10px;
+      --radius-md: 16px;
+      --radius-lg: 22px;
+      --radius-xl: 28px;
+      --radius-pill: 9999px;
+
+      --glass-blur: 18px;
+      --glass-saturation: 190%;
+    }
+
+    [data-theme="light"] {
+      --bg-base: #f8fafc;
+      --bg-mesh-1: rgba(99, 102, 241, 0.08);
+      --bg-mesh-2: rgba(6, 182, 212, 0.08);
+      --bg-mesh-3: rgba(244, 63, 94, 0.05);
+
+      --panel-bg: rgba(255, 255, 255, 0.88);
+      --panel-bg-solid: #ffffff;
+      --panel-border: rgba(226, 232, 240, 0.95);
+      --panel-border-hover: rgba(99, 102, 241, 0.4);
+      --panel-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.06), 0 2px 8px rgba(15, 23, 42, 0.03);
+      --panel-shadow-hover: 0 18px 36px -8px rgba(15, 23, 42, 0.12), 0 0 20px rgba(99, 102, 241, 0.12);
+
+      --text-main: #0f172a;
+      --text-sub: #1e293b;
+      --text-muted: #334155;
+      --text-dim: #475569;
+    }
+
+    [data-theme="light"] .brand-pill-tag,
+    [data-theme="light"] .column-count-badge {
+      background: rgba(79, 70, 229, 0.1);
+      color: #4338ca;
+      border-color: rgba(79, 70, 229, 0.28);
+    }
+
+    [data-theme="light"] .path-copy-pill {
+      background: rgba(79, 70, 229, 0.08);
+      color: #4338ca;
+      border-color: rgba(79, 70, 229, 0.24);
+    }
+    [data-theme="light"] .path-copy-pill:hover {
+      background: rgba(79, 70, 229, 0.15);
+      color: #312e81;
+      border-color: rgba(79, 70, 229, 0.4);
+    }
+
+    [data-theme="light"] .chic-status-pill.connected {
+      background: rgba(16, 185, 129, 0.12);
+      color: #047857;
+      border-color: rgba(16, 185, 129, 0.32);
+    }
+
+    [data-theme="light"] .chic-status-pill.disconnected {
+      background: rgba(239, 68, 68, 0.12);
+      color: #b91c1c;
+      border-color: rgba(239, 68, 68, 0.32);
+    }
+
+    [data-theme="light"] .chic-delta-badge.up {
+      background: rgba(16, 185, 129, 0.12);
+      color: #047857;
+      border-color: rgba(16, 185, 129, 0.28);
+    }
+
+    [data-theme="light"] .chic-delta-badge.down {
+      background: rgba(239, 68, 68, 0.12);
+      color: #b91c1c;
+      border-color: rgba(239, 68, 68, 0.28);
+    }
+
+    [data-theme="light"] .btn-chic {
+      color: #334155;
+    }
+    [data-theme="light"] .btn-chic:hover {
+      color: #0f172a;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', 'Sarabun', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.5;
+      position: relative;
+      transition: background-color 0.4s ease, color 0.3s ease;
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    }
+
+    /* Ambient Aurora Mesh */
+    .aurora-bg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .aurora-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: 0.75;
+      animation: float-orb 22s ease-in-out infinite alternate;
+      will-change: transform;
+    }
+
+    .aurora-orb-1 { top: -10%; left: 15%; width: 480px; height: 480px; background: var(--bg-mesh-1); animation-duration: 20s; }
+    .aurora-orb-2 { top: 30%; right: -5%; width: 520px; height: 520px; background: var(--bg-mesh-2); animation-duration: 26s; animation-delay: -5s; }
+    .aurora-orb-3 { bottom: -10%; left: 25%; width: 560px; height: 560px; background: var(--bg-mesh-3); animation-duration: 24s; animation-delay: -10s; }
+
+    .grid-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+      z-index: 1;
+    }
+    [data-theme="light"] .grid-overlay {
+      background-image: radial-gradient(rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+    }
+
+    .app-shell {
+      position: relative;
+      z-index: 2;
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 24px 24px 60px;
+    }
+
+    /* Header */
+    .chic-header {
+      background: var(--panel-bg);
+      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius-xl);
+      padding: 16px 22px;
+      box-shadow: var(--panel-shadow);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+      gap: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .brand-cluster {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-logo-gem {
+      width: 46px;
+      height: 46px;
+      background: linear-gradient(135deg, #6366f1, #a855f7 50%, #ec4899);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.45);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+    }
+
+    .brand-logo-gem svg {
+      width: 24px;
+      height: 24px;
+      position: relative;
+      z-index: 1;
+      animation: icon-pulse 3s infinite ease-in-out;
+    }
+
+    .brand-meta h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 21px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-pill-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      text-transform: uppercase;
+    }
+
+    .brand-meta p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .header-actions-cluster {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .chic-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px;
+      border-radius: var(--radius-pill);
+      background: var(--panel-bg-solid);
+      border: 1px solid var(--panel-border);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-sub);
+      box-shadow: var(--panel-shadow);
+      transition: all 0.3s ease;
+    }
+
+    .chic-status-pill.connected {
+      border-color: rgba(16, 185, 129, 0.35);
+      background: var(--success-soft);
+      color: #10b981;
+    }
+
+    .chic-status-pill.disconnected {
+      border-color: rgba(239, 68, 68, 0.4);
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+    }
+
+    .status-pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      position: relative;
+    }
+
+    .chic-status-pill.connected .status-pulse-dot::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      background: inherit;
+      opacity: 0.6;
+      animation: pulse-ring 2s infinite ease-out;
+    }
+
+    .btn-chic {
+      background: var(--panel-bg);
+      backdrop-filter: blur(var(--glass-blur));
+      border: 1px solid var(--panel-border);
+      color: var(--text-sub);
+      padding: 8px 16px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: 'Plus Jakarta Sans', 'Sarabun', sans-serif;
+      box-shadow: var(--panel-shadow);
+      position: relative;
+      overflow: hidden;
+      will-change: transform;
+    }
+
+    .btn-chic:hover {
+      background: var(--panel-bg-solid);
+      border-color: var(--panel-border-hover);
+      color: var(--text-main);
+      transform: translateY(-2px);
+      box-shadow: var(--panel-shadow-hover);
+    }
+
+    .btn-chic:active {
+      transform: translateY(0) scale(0.97);
+    }
+
+    .btn-chic svg {
+      width: 16px;
+      height: 16px;
+      transition: transform 0.3s ease;
+    }
+
+    .btn-chic:hover svg {
+      transform: scale(1.15);
+    }
+
+    .btn-icon-only {
+      width: 42px;
+      height: 42px;
+      min-width: 42px;
+      min-height: 42px;
+      padding: 0;
+      justify-content: center;
+      border-radius: var(--radius-pill);
+    }
+
+    .btn-sync.spinning svg {
+      animation: spin-refresh 0.8s linear;
+    }
+
+    /* Bento Strip */
+    .telemetry-bento-grid {
+      display: grid;
+      grid-template-columns: 1.8fr 1fr;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .bento-card {
+      background: var(--panel-bg);
+      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius-xl);
+      padding: 20px 24px;
+      box-shadow: var(--panel-shadow);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+      will-change: transform;
+    }
+
+    .bento-card:hover {
+      border-color: var(--panel-border-hover);
+      box-shadow: var(--panel-shadow-hover);
+    }
+
+    .device-telemetry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip-spec-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .chip-icon-box {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #10b981;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .chip-icon-box svg {
+      width: 18px;
+      height: 18px;
+      animation: icon-pulse 3s infinite ease-in-out;
+    }
+
+    .chip-identity {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chip-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chip-subtag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .path-copy-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(99, 102, 241, 0.08);
+      border: 1px solid rgba(99, 102, 241, 0.22);
+      color: #818cf8;
+      padding: 5px 12px;
+      border-radius: var(--radius-sm);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .path-copy-pill:hover {
+      background: rgba(99, 102, 241, 0.18);
+      border-color: rgba(99, 102, 241, 0.45);
+      color: #a5b4fc;
+      transform: translateY(-1px);
+    }
+
+    .path-copy-pill svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    .telemetry-meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--panel-border);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .telemetry-time-box {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .time-timestamp {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-main);
+      letter-spacing: -0.3px;
+    }
+
+    .time-relative {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .relative-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+      display: inline-block;
+      animation: pulse-ring 2s infinite ease-out;
+    }
+
+    .comfort-card-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 100%;
+      gap: 16px;
+    }
+
+    .comfort-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .comfort-tagline {
+      font-family: 'Outfit', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .comfort-state {
+      font-family: 'Plus Jakarta Sans', 'Sarabun', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-top: 3px;
+    }
+
+    .comfort-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .comfort-gauge-gem {
+      position: relative;
+      width: 76px;
+      height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .comfort-ring-svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .ring-bg {
+      fill: none;
+      stroke: var(--panel-border);
+      stroke-width: 6;
+    }
+
+    .ring-bar {
+      fill: none;
+      stroke: url(#comfortGradient);
+      stroke-width: 6.5;
+      stroke-linecap: round;
+      stroke-dasharray: 220;
+      stroke-dashoffset: 40;
+      transition: stroke-dashoffset 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .comfort-score-text {
+      position: absolute;
+      font-family: 'Outfit', sans-serif;
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.5px;
+    }
+
+    /* ==========================================================================
+       DYNAMIC BENTO GRID (Supports 6+ Columns Elegantly)
+       ========================================================================== */
+    .section-title-strip {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      padding: 0 4px;
+    }
+
+    .section-title-strip h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .column-count-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: var(--radius-pill);
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      color: #818cf8;
+    }
+
+    .metrics-dynamic-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    .metric-hero-card {
+      background: var(--panel-bg);
+      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius-xl);
+      padding: 22px 20px;
+      box-shadow: var(--panel-shadow);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+      will-change: transform, box-shadow;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 215px;
+    }
+
+    .metric-hero-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--panel-shadow-hover);
+      border-color: var(--panel-border-hover);
+    }
+
+    .metric-hero-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 18px;
+      right: 18px;
+      height: 3px;
+      border-radius: 0 0 6px 6px;
+      opacity: 0.85;
+      background: var(--card-accent, #6366f1);
+      transition: opacity 0.3s ease, height 0.3s ease;
+    }
+
+    .metric-hero-card:hover::before {
+      opacity: 1;
+      height: 4px;
+    }
+
+    .metric-header-tier {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .metric-badge-bundle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .metric-icon-orb {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--card-soft, rgba(99, 102, 241, 0.12));
+      border: 1px solid var(--card-border, rgba(99, 102, 241, 0.25));
+      color: var(--card-accent, #6366f1);
+      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .metric-hero-card:hover .metric-icon-orb {
+      transform: scale(1.1) rotate(4deg);
+    }
+
+    .metric-icon-orb svg {
+      width: 20px;
+      height: 20px;
+      stroke-width: 2.2;
+    }
+
+    .metric-titles-wrap {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .metric-display-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-sub);
+    }
+
+    .metric-code-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .condition-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+      background: var(--panel-bg-solid);
+      border: 1px solid var(--panel-border);
+      color: var(--text-sub);
+      white-space: nowrap;
+    }
+
+    .metric-value-tier {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      gap: 10px;
+    }
+
+    .value-unit-combo {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .hero-number {
+      font-family: 'Outfit', sans-serif;
+      font-size: 44px;
+      font-weight: 800;
+      letter-spacing: -2px;
+      color: var(--text-main);
+      line-height: 1;
+      font-feature-settings: "tnum" 1;
+      transition: color 0.3s ease;
+    }
+
+    .hero-number.updating {
+      animation: number-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .hero-unit {
+      font-family: 'Outfit', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-dim);
+      letter-spacing: -0.5px;
+    }
+
+    .chic-delta-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      letter-spacing: -0.3px;
+    }
+    .chic-delta-badge.up { background: rgba(16, 185, 129, 0.12); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.25); }
+    .chic-delta-badge.down { background: rgba(239, 68, 68, 0.12); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.25); }
+    .chic-delta-badge.neutral { background: rgba(148, 163, 184, 0.1); color: var(--text-dim); border: 1px solid var(--panel-border); }
+
+    .spectrum-bar-wrap {
+      margin-bottom: 12px;
+    }
+
+    .spectrum-track {
+      width: 100%;
+      height: 5px;
+      border-radius: var(--radius-pill);
+      background: rgba(255, 255, 255, 0.08);
+      position: relative;
+      overflow: hidden;
+    }
+    [data-theme="light"] .spectrum-track { background: rgba(15, 23, 42, 0.08); }
+
+    .spectrum-fill {
+      height: 100%;
+      border-radius: var(--radius-pill);
+      width: 0%;
+      background: linear-gradient(90deg, var(--card-accent, #6366f1) 0%, var(--card-accent, #6366f1) 85%, #ffffff 100%);
+      box-shadow: 0 0 10px var(--card-accent, #6366f1);
+      transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .spectrum-legend {
+      display: flex;
+      justify-content: space-between;
+      font-size: 9.5px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    .metric-footer-tier {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 10px;
+      border-top: 1px solid var(--panel-border);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .minmax-stats {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-sub);
+    }
+
+    /* Empty state */
+    .empty-waiting-card {
+      grid-column: 1 / -1;
+      background: var(--panel-bg);
+      border: 2px dashed var(--panel-border);
+      border-radius: var(--radius-xl);
+      padding: 40px 24px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+    }
+
+    .empty-icon-pulse {
+      width: 64px;
+      height: 64px;
+      border-radius: 20px;
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: #818cf8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: icon-pulse 2.5s infinite;
+    }
+
+    .empty-icon-pulse svg { width: 32px; height: 32px; }
+
+    .empty-waiting-card h4 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .empty-waiting-card p {
+      max-width: 500px;
+      font-size: 13.5px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .empty-actions-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 8px;
+    }
+
+    /* Charts Suite */
+    .chart-panel-bento {
+      background: var(--panel-bg);
+      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius-xl);
+      padding: 22px 24px;
+      box-shadow: var(--panel-shadow);
+      margin-bottom: 24px;
+      transition: all 0.3s ease;
+    }
+
+    .chart-super-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .chart-identity-bundle {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .chart-icon-gem {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      color: #818cf8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .chart-title-cluster h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .chart-title-cluster p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .segmented-control {
+      display: flex;
+      align-items: center;
+      background: var(--panel-bg-solid);
+      border: 1px solid var(--panel-border);
+      padding: 3px;
+      border-radius: var(--radius-pill);
+      gap: 2px;
+      flex-wrap: wrap;
+    }
+
+    .segment-tab {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: 'Plus Jakarta Sans', 'Sarabun', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .segment-tab:hover { color: var(--text-main); }
+
+    .segment-tab.active {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #ffffff;
+      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.4);
+    }
+
+    .chart-main-canvas-wrap {
+      position: relative;
+      height: 250px;
+      width: 100%;
+    }
+
+    /* Modal */
+    .modal-backdrop-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 7, 16, 0.75);
+      backdrop-filter: blur(12px);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: modal-fade-in 0.25s ease-out;
+    }
+
+    .modal-backdrop-overlay.active { display: flex; }
+
+    .modal-glass-card {
+      background: var(--panel-bg-solid);
+      border: 1px solid var(--panel-border);
+      width: 100%;
+      max-width: 520px;
+      border-radius: var(--radius-xl);
+      padding: 28px;
+      box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6), 0 0 30px rgba(99, 102, 241, 0.2);
+      animation: modal-scale-up 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+    }
+
+    .modal-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .modal-icon-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .modal-icon-title svg {
+      width: 22px; height: 22px; color: #818cf8; animation: icon-spin-slow 6s infinite linear;
+    }
+
+    .modal-title-text {
+      font-family: 'Outfit', sans-serif;
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .btn-close-modal {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      color: var(--text-dim);
+      width: 36px; height: 36px;
+      min-width: 36px; min-height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-close-modal:hover {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #f87171;
+    }
+
+    .modal-explanatory-copy {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 22px;
+      line-height: 1.6;
+    }
+
+    .input-field-group { margin-bottom: 18px; }
+    .input-field-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-sub);
+      margin-bottom: 6px;
+    }
+
+    .chic-text-input {
+      width: 100%;
+      padding: 11px 14px;
+      background: var(--bg-base);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius-sm);
+      color: var(--text-main);
+      font-size: 13.5px;
+      font-family: 'JetBrains Mono', monospace;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .chic-text-input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+    }
+
+    /* Student Guide Accordion */
+    .student-guide-details {
+      margin-top: 14px;
+      background: var(--bg-base);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      transition: border-color 0.2s ease;
+    }
+    .student-guide-details[open] {
+      border-color: rgba(99, 102, 241, 0.4);
+    }
+    .student-guide-summary {
+      padding: 11px 15px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text-sub);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+      list-style: none;
+    }
+    .student-guide-summary::-webkit-details-marker { display: none; }
+    .student-guide-summary .chevron-icon {
+      transition: transform 0.25s ease;
+    }
+    .student-guide-details[open] .chevron-icon {
+      transform: rotate(180deg);
+    }
+    .student-guide-content {
+      padding: 0 15px 15px;
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .student-guide-content code {
+      font-family: 'JetBrains Mono', monospace;
+      color: #818cf8;
+      background: rgba(99, 102, 241, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    [data-theme="light"] .student-guide-content code {
+      color: #4338ca;
+    }
+    .json-code-box {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      margin: 8px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #a5b4fc;
+      overflow-x: auto;
+      line-height: 1.5;
+    }
+    [data-theme="light"] .json-code-box {
+      background: #f1f5f9;
+      color: #334155;
+    }
+    .guide-note {
+      font-size: 11.5px;
+      color: #10b981;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+    [data-theme="light"] .guide-note {
+      color: #047857;
+    }
+
+    .modal-btn-row {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .btn-save-conn {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #ffffff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+      transition: all 0.25s ease;
+      font-family: 'Plus Jakarta Sans', 'Sarabun', sans-serif;
+    }
+
+    .btn-save-conn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 22px rgba(99, 102, 241, 0.55);
+    }
+
+    /* Toast */
+    .toast-capsule {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      color: #ffffff;
+      padding: 10px 18px;
+      border-radius: var(--radius-pill);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(99, 102, 241, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 1001;
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      pointer-events: none;
+    }
+
+    .toast-capsule.active { opacity: 1; transform: translateY(0) scale(1); }
+    .toast-capsule svg { width: 16px; height: 16px; color: #10b981; }
+
+    /* Footer */
+    .chic-footer {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid var(--panel-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .footer-left { display: flex; align-items: center; gap: 8px; }
+    .footer-left svg { width: 15px; height: 15px; color: #6366f1; }
+    .chic-footer a { color: #818cf8; text-decoration: none; font-weight: 600; }
+
+    /* Animations */
+    @keyframes float-orb {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(40px, 30px) scale(1.08); }
+      100% { transform: translate(-30px, -20px) scale(0.94); }
+    }
+    @keyframes icon-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.85; } }
+    @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 0.8; } 100% { transform: scale(2.4); opacity: 0; } }
+    @keyframes icon-spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes spin-refresh { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes number-pop { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+    @keyframes modal-fade-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes modal-scale-up { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+
+    /* Accessibility */
+    .skip-link {
+      position: absolute;
+      top: -60px;
+      left: 24px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #ffffff;
+      padding: 9px 18px;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      font-size: 13px;
+      z-index: 99999;
+      transition: top 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      text-decoration: none;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.5);
+    }
+    .skip-link:focus {
+      top: 16px;
+    }
+
+    :focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+    button:focus:not(:focus-visible), input:focus:not(:focus-visible) { outline: none; }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+      .aurora-orb { display: none !important; }
+      .metric-hero-card:hover, .btn-chic:hover { transform: none !important; }
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .telemetry-bento-grid { grid-template-columns: 1fr; }
+      .metrics-dynamic-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 640px) {
+      :root { --glass-blur: 8px; }
+      .app-shell { padding: 16px 14px 40px; }
+      .chic-header { flex-direction: column; align-items: flex-start; }
+      .header-actions-cluster { width: 100%; justify-content: space-between; }
+      .metrics-dynamic-grid { grid-template-columns: 1fr; }
+      .hero-number { font-size: 38px; }
+      .chart-main-canvas-wrap { height: 200px; }
+      .chart-super-header { flex-direction: column; align-items: flex-start; }
+      .segmented-control { width: 100%; justify-content: flex-start; }
+      .segment-tab { padding: 5px 8px; font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Accessible Skip Link -->
+  <a href="#metricsDynamicGrid" class="skip-link">ข้ามไปยังคอลัมน์เซนเซอร์ (Skip to sensor metrics)</a>
+
+  <!-- Ambient Aurora Lighting Effects -->
+  <div class="aurora-bg" aria-hidden="true">
+    <div class="aurora-orb aurora-orb-1"></div>
+    <div class="aurora-orb aurora-orb-2"></div>
+    <div class="aurora-orb aurora-orb-3"></div>
+  </div>
+  <div class="grid-overlay" aria-hidden="true"></div>
+
+  <!-- SVG Gradient definitions -->
+  <svg style="width:0;height:0;position:absolute;" aria-hidden="true" focusable="false">
+    <linearGradient id="comfortGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="60%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#6366f1" />
+    </linearGradient>
+  </svg>
+
+  <div class="app-shell">
+
+    <!-- Top Header -->
+    <header class="chic-header">
+      <div class="brand-cluster">
+        <div class="brand-logo-gem" title="Smart Environment IoT Station">
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12c0-2.8 1.15-5.33 3-7.14"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
+        </div>
+        <div class="brand-meta">
+          <h1>Smart Environment <span class="brand-pill-tag">STATION</span></h1>
+          <p>
+            <span>สถานีตรวจวัดสภาพแวดล้อมและสภาพอากาศ</span>
+            <span>•</span>
+            <span id="headerDeviceLabel">/lab/esp32</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="header-actions-cluster">
+        <!-- Live status pill -->
+        <div id="connectionStatus" class="chic-status-pill connected" role="status" aria-live="polite">
+          <span class="status-pulse-dot" aria-hidden="true"></span>
+          <span id="connectionText">LIVE • เชื่อมต่อ Firebase แล้ว</span>
+        </div>
+
+        <!-- Sync Now Button -->
+        <button class="btn-chic btn-icon-only btn-sync" onclick="manualSync()" id="btnSyncNow" title="ดึงข้อมูลล่าสุดจาก Firebase" aria-label="รีเฟรชดึงข้อมูลจาก Firebase ทันที">
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+            <path d="M16 21h5v-5"/>
+          </svg>
+        </button>
+
+        <!-- Settings Button -->
+        <button class="btn-chic" onclick="openConfigModal()" id="btnOpenSettings" aria-label="เปิดหน้าต่างตั้งค่าการเชื่อมต่อ Firebase">
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          ตั้งค่า
+        </button>
+
+        <!-- Theme Toggle Button -->
+        <button class="btn-chic btn-icon-only" onclick="toggleTheme()" id="themeToggleBtn" title="สลับโหมด สีสว่าง/สีมืด" aria-label="สลับโหมดสี สว่างหรือมืด">
+          <svg id="themeIcon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Bento Telemetry Strip & Environmental Comfort Index -->
+    <div class="telemetry-bento-grid">
+      <!-- Device & Path Card -->
+      <div class="bento-card">
+        <div class="device-telemetry-header">
+          <div class="chip-spec-wrap">
+            <div class="chip-icon-box">
+              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="16" height="16" x="4" y="4" rx="2"/>
+                <rect width="6" height="6" x="9" y="9" rx="1"/>
+                <path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/>
+              </svg>
+            </div>
+            <div class="chip-identity">
+              <div class="chip-title">
+                <span id="deviceName">Smart Environment Station</span>
+              </div>
+              <span class="chip-subtag">สถานีตรวจวัดคุณภาพอากาศและสภาพแวดล้อม (ขั้นต่ำ 6 คอลัมน์)</span>
+            </div>
+          </div>
+
+          <!-- Click to copy Node Path pill -->
+          <button class="path-copy-pill" onclick="copyNodePath()" title="คลิกเพื่อคัดลอก Data Path" aria-label="คัดลอก Data Path สู่ Clipboard">
+            <span id="devicePathDisplay">/lab/esp32/latest</span>
+            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+              <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="telemetry-meta-row">
+          <div class="telemetry-time-box">
+            <span class="time-timestamp" id="lastUpdatedTime">--/--/---- --:--:--</span>
+            <span class="time-relative" id="elapsedText">
+              <span class="relative-dot"></span> กำลังรอข้อมูลจาก Firebase...
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Environmental Comfort Index -->
+      <div class="bento-card">
+        <div class="comfort-card-inner">
+          <div class="comfort-info">
+            <span class="comfort-tagline">ENVIRONMENT COMFORT INDEX</span>
+            <div class="comfort-state" id="comfortStateLabel">กำลังประเมิน...</div>
+            <p class="comfort-desc" id="comfortSubText">คำนวณจากค่าตรวจวัดในระบบ</p>
+          </div>
+
+          <div class="comfort-gauge-gem">
+            <svg class="comfort-ring-svg" viewBox="0 0 80 80">
+              <circle class="ring-bg" cx="40" cy="40" r="34" />
+              <circle class="ring-bar" id="comfortRingBar" cx="40" cy="40" r="34" />
+            </svg>
+            <span class="comfort-score-text" id="comfortScoreVal">--%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section Strip: Dynamic Sensor Cards -->
+    <div class="section-title-strip">
+      <h3>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="7" height="9" x="3" y="3" rx="1"/>
+          <rect width="7" height="5" x="14" y="3" rx="1"/>
+          <rect width="7" height="9" x="14" y="12" rx="1"/>
+          <rect width="7" height="5" x="3" y="16" rx="1"/>
+        </svg>
+        ดัชนีตรวจวัดสิ่งแวดล้อมและสภาพอากาศ (Environmental & Climate Metrics)
+      </h3>
+      <span class="column-count-badge" id="detectedColCount">0 คอลัมน์</span>
+    </div>
+
+    <!-- DYNAMIC METRICS BENTO GRID (Auto-adapts to 6+ columns) -->
+    <div class="metrics-dynamic-grid" id="metricsDynamicGrid">
+      <!-- Empty state initially until data arrives -->
+      <div class="empty-waiting-card" id="emptyWaitingCard">
+        <div class="empty-icon-pulse">
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
+        <h4>⏳ กำลังรอรับข้อมูลจริงจาก ESP32</h4>
+        <p>
+          ระบบกำลังเชื่อมต่อและรอแพ็กเกจข้อมูลเซนเซอร์จริงจากบอร์ด ESP32 ผ่าน Firebase Realtime Database (<code>/lab/esp32/latest</code>) ทันทีที่บอร์ดส่งค่าเข้ามา แดชบอร์ดจะตรวจจับคอลัมน์อัตโนมัติและแสดงผลทันที
+        </p>
+        <div class="empty-actions-row">
+          <button class="btn-chic" onclick="manualSync()">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
+              <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+              <path d="M16 21h5v-5"/>
+            </svg>
+            ตรวจสอบการรับข้อมูลจาก Firebase เดี๋ยวนี้
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Telemetry Interactive Charts Suite -->
+    <div class="chart-panel-bento">
+      <div class="chart-super-header">
+        <div class="chart-identity-bundle">
+          <div class="chart-icon-gem">
+            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+              <polyline points="16 7 22 7 22 13"/>
+            </svg>
+          </div>
+          <div class="chart-title-cluster">
+            <h2 id="mainChartTitle">กราฟประวัติเรียลไทม์ (Live Sensor Telemetry)</h2>
+            <p id="mainChartSubtitle">บันทึกแนวโน้มและบันทึกประวัติแบบต่อเนื่อง</p>
+          </div>
+        </div>
+
+        <!-- Dynamic Segmented Tab Controls -->
+        <div class="segmented-control" id="chartSegmentTabs" role="tablist" aria-label="เลือกเซนเซอร์สำหรับกราฟ">
+          <!-- Dynamically populated buttons for all columns -->
+        </div>
+      </div>
+
+      <div class="chart-main-canvas-wrap">
+        <canvas id="mainHeroChart" role="img" aria-label="กราฟเส้นวิเคราะห์เซนเซอร์หลักแบบเรียลไทม์"><p>กราฟเส้นแสดงข้อมูลเรียลไทม์</p></canvas>
+      </div>
+    </div>
+
+    <!-- Chic Footer -->
+    <footer class="chic-footer">
+      <div class="footer-left">
+        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="m4.93 4.93 4.24 4.24"/>
+          <path d="m14.83 9.17 4.24-4.24"/>
+          <path d="m14.83 14.83 4.24 4.24"/>
+          <path d="m9.17 14.83-4.24 4.24"/>
+          <circle cx="12" cy="12" r="4"/>
+        </svg>
+        <span>Smart Environment IoT Station • ESPHome + Firebase RTDB (6+ Columns Architecture)</span>
+      </div>
+      <div>
+        Design System inspired by <a href="https://impeccable.style" target="_blank" rel="noopener noreferrer">Impeccable</a> • Icons by <a href="https://lucide.dev" target="_blank" rel="noopener noreferrer">Lucide</a>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Settings Dialog Modal -->
+  <div class="modal-backdrop-overlay" id="configModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalDesc">
+    <div class="modal-glass-card">
+      <div class="modal-top-bar">
+        <div class="modal-icon-title">
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          <div class="modal-title-text" id="modalTitle">กำหนดค่า Firebase Realtime Database</div>
+        </div>
+        <button class="btn-close-modal" onclick="closeConfigModal()" aria-label="ปิดหน้าต่างตั้งค่า" title="ปิด">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <p class="modal-explanatory-copy" id="modalDesc">
+        ระบุ URL ของ Firebase RTDB และ Data Path ของ ESP32 (ระบบรองรับข้อมูลเซนเซอร์อิสระได้ไม่จำกัดคอลัมน์)
+      </p>
+
+      <div class="input-field-group">
+        <label for="cfgDbUrl">Firebase Database URL</label>
+        <input type="text" id="cfgDbUrl" class="chic-text-input" placeholder="https://iot-128-default-rtdb.asia-southeast1.firebasedatabase.app" autocomplete="url" />
+      </div>
+
+      <div class="input-field-group">
+        <label for="cfgNodePath">Data Node Path (เช่น /lab/esp32)</label>
+        <input type="text" id="cfgNodePath" class="chic-text-input" placeholder="/lab/esp32" />
+      </div>
+
+      <!-- Student Lab Guide Accordion -->
+      <details class="student-guide-details">
+        <summary class="student-guide-summary">
+          <span>📚 ข้อกำหนดเซนเซอร์ นศ. (ขั้นต่ำ 6 คอลัมน์)</span>
+          <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="student-guide-content">
+          <p>นักศึกษากำหนดชื่อคอลัมน์เซนเซอร์ตามโจทย์ของตนเองได้อิสระ (อย่างน้อย 6 คอลัมน์) ตัวอย่าง JSON ที่ส่งไปยัง <code>/latest.json</code>:</p>
+          <pre class="json-code-box"><code>{
+  "temp": 28.5,       // อุณหภูมิอากาศ (°C)
+  "humi": 65.0,       // ความชื้นสัมพัทธ์ (%)
+  "light": 520,       // ความเข้มแสง (lx)
+  "soil": 60.0,       // ความชื้นในดิน (%)
+  "pm25": 14.5,       // ฝุ่น PM2.5 (µg/m³)
+  "pressure": 1012.3, // ความกดอากาศ (hPa)
+  "timestamp": 1740000000
+}</code></pre>
+          <p class="guide-note">✨ ระบบตรวจจับคอลัมน์อัตโนมัติ (Auto-discovery) สร้างการ์ดและกราฟให้อัตโนมัติทันที</p>
+        </div>
+      </details>
+
+      <div class="modal-btn-row">
+        <button class="btn-chic" onclick="clearFirebaseData()" style="margin-right: auto; color: #f87171; border-color: rgba(239, 68, 68, 0.3);" title="ลบข้อมูลล่าสุดบน Firebase เพื่อให้หน้าเว็บเริ่มรอรับข้อมูลใหม่จาก ESP32">
+          🧹 ล้างค่ารอ ESP32 ใหม่
+        </button>
+        <button class="btn-chic" onclick="closeConfigModal()">ยกเลิก</button>
+        <button class="btn-save-conn" onclick="saveConfiguration()">บันทึกและเชื่อมต่อ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Capsule -->
+  <div class="toast-capsule" id="chicToast" role="alert" aria-live="assertive">
+    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+    <span id="toastMessage">คัดลอก Path แล้ว!</span>
+  </div>
+
+  <script>
+    // ==========================================================================
+    // THEME MANAGEMENT
+    // ==========================================================================
+    function initTheme() {
+      const saved = localStorage.getItem('esp32_chic_theme');
+      if (saved) {
+        document.documentElement.setAttribute('data-theme', saved);
+      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+      updateThemeIcon();
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme') || 'dark';
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('esp32_chic_theme', next);
+      updateThemeIcon();
+      rebuildChartThemes();
+    }
+
+    function updateThemeIcon() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const icon = document.getElementById('themeIcon');
+      if (isDark) {
+        icon.innerHTML = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>';
+      } else {
+        icon.innerHTML = '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>';
+      }
+    }
+
+    // ==========================================================================
+    // CONFIGURATION & PERSISTENCE
+    // ==========================================================================
+    const DEFAULT_CONFIG = {
+      databaseUrl: "https://iot-128-default-rtdb.asia-southeast1.firebasedatabase.app",
+      nodePath: "/lab/esp32"
+    };
+
+    let config = { ...DEFAULT_CONFIG };
+
+    function loadSavedConfig() {
+      const saved = localStorage.getItem("esp32_chic_cfg");
+      if (saved) {
+        try { config = { ...config, ...JSON.parse(saved) }; } catch (e) { console.error("Config parse error", e); }
+      }
+    }
+
+    let lastActiveFocus = null;
+
+    function saveConfiguration() {
+      let dbUrl = document.getElementById("cfgDbUrl").value.trim();
+      let nodePath = document.getElementById("cfgNodePath").value.trim();
+
+      if (dbUrl.endsWith("/")) dbUrl = dbUrl.slice(0, -1);
+      if (!nodePath.startsWith("/")) nodePath = "/" + nodePath;
+      if (nodePath.endsWith("/")) nodePath = nodePath.slice(0, -1);
+
+      config.databaseUrl = dbUrl || DEFAULT_CONFIG.databaseUrl;
+      config.nodePath = nodePath || DEFAULT_CONFIG.nodePath;
+
+      localStorage.setItem("esp32_chic_cfg", JSON.stringify(config));
+      closeConfigModal();
+      showToast("บันทึกการตั้งค่าแล้ว กำลังเชื่อมต่อ...");
+      initConnection();
+    }
+
+    function openConfigModal() {
+      lastActiveFocus = document.activeElement;
+      document.getElementById("cfgDbUrl").value = config.databaseUrl;
+      document.getElementById("cfgNodePath").value = config.nodePath;
+      const modal = document.getElementById("configModal");
+      modal.classList.add("active");
+      setTimeout(() => document.getElementById("cfgDbUrl").focus(), 60);
+    }
+
+    function closeConfigModal() {
+      const modal = document.getElementById("configModal");
+      modal.classList.remove("active");
+      if (lastActiveFocus && typeof lastActiveFocus.focus === 'function') lastActiveFocus.focus();
+    }
+
+    function trapModalFocus(e) {
+      const modal = document.getElementById("configModal");
+      if (!modal || !modal.classList.contains("active")) return;
+      if (e.key !== "Tab") return;
+
+      const focusable = Array.from(modal.querySelectorAll('button:not([disabled]), input:not([disabled]), summary, [tabindex]:not([tabindex="-1"])'));
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          last.focus();
+          e.preventDefault();
+        }
+      } else {
+        if (document.activeElement === last) {
+          first.focus();
+          e.preventDefault();
+        }
+      }
+    }
+
+    document.addEventListener("keydown", trapModalFocus);
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        const modal = document.getElementById("configModal");
+        if (modal && modal.classList.contains("active")) closeConfigModal();
+      }
+    });
+
+    document.getElementById("configModal").addEventListener("click", (e) => {
+      if (e.target.id === "configModal") closeConfigModal();
+    });
+
+    // ==========================================================================
+    // TOAST NOTIFICATION
+    // ==========================================================================
+    let toastTimeout = null;
+    function showToast(msg) {
+      const toast = document.getElementById("chicToast");
+      const text = document.getElementById("toastMessage");
+      text.textContent = msg;
+      toast.classList.add("active");
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => toast.classList.remove("active"), 2600);
+    }
+
+    function copyNodePath() {
+      const path = `${config.nodePath}/latest`;
+      navigator.clipboard.writeText(path).then(() => {
+        showToast(`คัดลอก "${path}" แล้ว!`);
+      }).catch(() => {
+        showToast(`Path: ${path}`);
+      });
+    }
+
+    // ==========================================================================
+    // SENSOR METADATA & SMART INFERENCE (For any student-defined columns)
+    // ==========================================================================
+    const PALETTE_COLORS = [
+      "#f43f5e", "#06b6d4", "#f59e0b", "#10b981", "#a855f7", "#0284c7", "#ec4899", "#f97316"
+    ];
+
+    const SENSOR_META = {
+      temp: { label: "อุณหภูมิอากาศ", unit: "°C", color: "#f43f5e", icon: "temp", min: 0, max: 50 },
+      temperature: { label: "อุณหภูมิอากาศ", unit: "°C", color: "#f43f5e", icon: "temp", min: 0, max: 50 },
+      humi: { label: "ความชื้นสัมพัทธ์", unit: "%", color: "#06b6d4", icon: "humi", min: 0, max: 100 },
+      humidity: { label: "ความชื้นสัมพัทธ์", unit: "%", color: "#06b6d4", icon: "humi", min: 0, max: 100 },
+      light: { label: "ความเข้มแสง", unit: "lx", color: "#f59e0b", icon: "light", min: 0, max: 2000 },
+      lux: { label: "ความเข้มแสง", unit: "lx", color: "#f59e0b", icon: "light", min: 0, max: 2000 },
+      soil: { label: "ความชื้นในดิน", unit: "%", color: "#10b981", icon: "soil", min: 0, max: 100 },
+      pm25: { label: "ฝุ่นละออง PM2.5", unit: "µg/m³", color: "#a855f7", icon: "pm25", min: 0, max: 100 },
+      pressure: { label: "ความกดอากาศ", unit: "hPa", color: "#0284c7", icon: "press", min: 980, max: 1040 },
+      co2: { label: "ก๊าซ CO2", unit: "ppm", color: "#ec4899", icon: "co2", min: 400, max: 2000 },
+      volt: { label: "แรงดันไฟ", unit: "V", color: "#f97316", icon: "volt", min: 0, max: 5 },
+      voltage: { label: "แรงดันไฟ", unit: "V", color: "#f97316", icon: "volt", min: 0, max: 5 },
+      rssi: { label: "สัญญาณ Wi-Fi", unit: "dBm", color: "#6366f1", icon: "wifi", min: -90, max: -30 }
+    };
+
+    function getSensorSvg(iconType) {
+      switch(iconType) {
+        case "temp":
+          return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>';
+        case "humi":
+          return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"/></svg>';
+        case "light":
+          return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>';
+        case "soil":
+          return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20h10"/><path d="M10 20c0-4.4 3.6-8 8-8"/><path d="M4 20c0-7.7 6.3-14 14-14"/><path d="M14 6c0 3.3-2.7 6-6 6"/></svg>';
+        case "pm25":
+          return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/></svg>';
+        case "press":
+          return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m14 14-4-4"/><path d="M12 6v2"/><path d="M6 12h2"/><path d="M16 12h2"/></svg>';
+        default:
+          return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>';
+      }
+    }
+
+    function getConditionText(key, val) {
+      if (key.includes("temp")) {
+        if (val < 20) return "❄️ หนาวเย็น";
+        if (val <= 28) return "🍃 สบายตัว";
+        if (val <= 34) return "🌤️ อบอุ่น";
+        return "🔥 อากาศร้อน";
+      }
+      if (key.includes("humi")) {
+        if (val < 40) return "🌵 อากาศแห้ง";
+        if (val <= 70) return "💧 ชุ่มชื้นดี";
+        return "🌧️ ชื้นสูง";
+      }
+      if (key.includes("light") || key.includes("lux")) {
+        if (val < 100) return "🌙 แสงสลัว";
+        if (val <= 600) return "⛅ สว่างพอดี";
+        return "☀️ สว่างสดใส";
+      }
+      if (key.includes("soil")) {
+        if (val < 30) return "🍂 ดินแห้ง";
+        if (val <= 70) return "🌿 ชุ่มชื้นดี";
+        return "🌊 ดินแฉะมาก";
+      }
+      if (key.includes("pm")) {
+        if (val <= 15) return "🍃 อากาศดีมาก";
+        if (val <= 37.5) return "🌤️ ปานกลาง";
+        return "🚨 เกินมาตรฐาน";
+      }
+      if (key.includes("press")) {
+        if (val < 1008) return "🌀 ความกดต่ำ";
+        return "🧭 ความกดอากาศปกติ";
+      }
+      return "📊 ปกติ";
+    }
+
+    function getMetaForField(key, index) {
+      const lower = key.toLowerCase();
+      if (SENSOR_META[lower]) return SENSOR_META[lower];
+
+      // Smart inference
+      for (const [k, meta] of Object.entries(SENSOR_META)) {
+        if (lower.includes(k)) return meta;
+      }
+
+      // Fallback custom column
+      const color = PALETTE_COLORS[index % PALETTE_COLORS.length];
+      const cleanTitle = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      return {
+        label: cleanTitle,
+        unit: "",
+        color: color,
+        icon: "generic",
+        min: 0,
+        max: 100
+      };
+    }
+
+    // ==========================================================================
+    // DYNAMIC STATE
+    // ==========================================================================
+    let discoveredColumns = [];
+    let prevData = {};
+    let minMax = {};
+    let telemetryHistory = { labels: [] };
+    let lastDataTimestamp = null;
+    let lastPacketTimestamp = null;
+    let lastDataSignature = null;
+    let pollInterval = null;
+    let timerInterval = null;
+    const MAX_POINTS = 30;
+
+    let activeChartField = null;
+    let mainHeroChart = null;
+
+    // ==========================================================================
+    // DYNAMIC DOM CARD GENERATOR
+    // ==========================================================================
+    function ensureDynamicCards(dataKeys) {
+      const validCols = dataKeys.filter(k => k !== "timestamp");
+      if (validCols.length === 0) return;
+
+      // Check if columns changed
+      const isSame = discoveredColumns.length === validCols.length &&
+        discoveredColumns.every((c, i) => c === validCols[i]);
+
+      if (isSame) return; // cards already exist
+
+      discoveredColumns = validCols;
+      document.getElementById("detectedColCount").textContent = `${discoveredColumns.length} คอลัมน์เซนเซอร์`;
+
+      const grid = document.getElementById("metricsDynamicGrid");
+      grid.innerHTML = ""; // clear waiting empty state
+
+      discoveredColumns.forEach((colKey, idx) => {
+        const meta = getMetaForField(colKey, idx);
+        if (!minMax[colKey]) minMax[colKey] = { min: Infinity, max: -Infinity };
+        if (!telemetryHistory[colKey]) telemetryHistory[colKey] = [];
+
+        const card = document.createElement("div");
+        card.className = "metric-hero-card";
+        card.id = `card_${colKey}`;
+        card.style.setProperty("--card-accent", meta.color);
+        card.style.setProperty("--card-soft", meta.color + "18");
+        card.style.setProperty("--card-border", meta.color + "40");
+
+        card.innerHTML = `
+          <div>
+            <div class="metric-header-tier">
+              <div class="metric-badge-bundle">
+                <div class="metric-icon-orb">
+                  ${getSensorSvg(meta.icon)}
+                </div>
+                <div class="metric-titles-wrap">
+                  <span class="metric-display-name">${meta.label}</span>
+                  <span class="metric-code-tag">${colKey}</span>
+                </div>
+              </div>
+              <span class="condition-pill" id="cond_${colKey}">รอข้อมูล</span>
+            </div>
+
+            <div class="metric-value-tier">
+              <div class="value-unit-combo">
+                <span class="hero-number" id="val_${colKey}">--</span>
+                <span class="hero-unit">${meta.unit}</span>
+              </div>
+              <span class="chic-delta-badge neutral" id="delta_${colKey}">-</span>
+            </div>
+
+            <div class="spectrum-bar-wrap">
+              <div class="spectrum-track">
+                <div class="spectrum-fill" id="spectrum_${colKey}"></div>
+              </div>
+              <div class="spectrum-legend">
+                <span>${meta.min} ${meta.unit}</span>
+                <span>${meta.max} ${meta.unit}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="metric-footer-tier">
+            <span>ช่วงสถิติ</span>
+            <span class="minmax-stats" id="minmax_${colKey}">MIN -- • MAX --</span>
+          </div>
+        `;
+
+        grid.appendChild(card);
+      });
+
+      // Update Chart tabs
+      rebuildChartSegmentTabs();
+    }
+
+    // ==========================================================================
+    // CHART.JS ENGINE (DYNAMIC)
+    // ==========================================================================
+    function getChartCommonOptions(isDark) {
+      const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(15, 23, 42, 0.06)';
+      const tickColor = isDark ? '#64748b' : '#94a3b8';
+
+      return {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 350, easing: 'easeOutQuart' },
+        interaction: { intersect: false, mode: 'index' },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: isDark ? 'rgba(14, 20, 38, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+            titleColor: isDark ? '#f8fafc' : '#0f172a',
+            bodyColor: isDark ? '#cbd5e1' : '#334155',
+            titleFont: { family: 'Plus Jakarta Sans', size: 12, weight: 'bold' },
+            bodyFont: { family: 'JetBrains Mono', size: 13, weight: 'bold' },
+            padding: 10,
+            cornerRadius: 10,
+            borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(226, 232, 240, 0.9)',
+            borderWidth: 1
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: gridColor, drawBorder: false },
+            ticks: { color: tickColor, font: { family: 'JetBrains Mono', size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 7 },
+            border: { display: false }
+          },
+          y: {
+            grid: { color: gridColor, drawBorder: false },
+            ticks: { color: tickColor, font: { family: 'JetBrains Mono', size: 10 } },
+            border: { display: false }
+          }
+        }
+      };
+    }
+
+    function initHeroChart() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const ctx = document.getElementById('mainHeroChart').getContext('2d');
+      mainHeroChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels: [], datasets: [] },
+        options: getChartCommonOptions(isDark)
+      });
+    }
+
+    function rebuildChartThemes() {
+      if (!mainHeroChart) return;
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      mainHeroChart.options = getChartCommonOptions(isDark);
+      syncHeroChart();
+    }
+
+    function rebuildChartSegmentTabs() {
+      const container = document.getElementById("chartSegmentTabs");
+      container.innerHTML = "";
+
+      if (discoveredColumns.length === 0) return;
+
+      if (!activeChartField || !discoveredColumns.includes(activeChartField)) {
+        activeChartField = discoveredColumns[0];
+      }
+
+      discoveredColumns.forEach((colKey, i) => {
+        const meta = getMetaForField(colKey, i);
+        const isActive = colKey === activeChartField;
+        const btn = document.createElement("button");
+        btn.className = `segment-tab ${isActive ? 'active' : ''}`;
+        btn.id = `chart_tab_${colKey}`;
+        btn.setAttribute('role', 'tab');
+        btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        btn.setAttribute('tabindex', isActive ? '0' : '-1');
+        btn.textContent = `${meta.label}`;
+        btn.onclick = () => selectChartTab(colKey);
+        btn.onkeydown = (e) => handleTabKeyNavigation(e, i);
+        container.appendChild(btn);
+      });
+
+      syncHeroChart();
+    }
+
+    function selectChartTab(colKey) {
+      activeChartField = colKey;
+      document.querySelectorAll('.segment-tab').forEach(b => {
+        const isMatch = b.id === `chart_tab_${colKey}`;
+        b.classList.toggle('active', isMatch);
+        b.setAttribute('aria-selected', isMatch ? 'true' : 'false');
+        b.setAttribute('tabindex', isMatch ? '0' : '-1');
+      });
+      syncHeroChart();
+    }
+
+    function handleTabKeyNavigation(e, currentIndex) {
+      const tabs = Array.from(document.querySelectorAll('.segment-tab'));
+      if (tabs.length === 0) return;
+
+      let nextIndex = null;
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        nextIndex = (currentIndex + 1) % tabs.length;
+      } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+      } else if (e.key === "Home") {
+        nextIndex = 0;
+      } else if (e.key === "End") {
+        nextIndex = tabs.length - 1;
+      }
+
+      if (nextIndex !== null) {
+        e.preventDefault();
+        tabs[nextIndex].focus();
+        tabs[nextIndex].click();
+      }
+    }
+
+    function syncHeroChart() {
+      if (!mainHeroChart || !activeChartField) return;
+      const idx = discoveredColumns.indexOf(activeChartField);
+      const meta = getMetaForField(activeChartField, idx >= 0 ? idx : 0);
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+      document.getElementById('mainChartTitle').textContent = `กราฟประวัติ: ${meta.label} (${activeChartField})`;
+      document.getElementById('mainChartSubtitle').textContent = `หน่วยวัด: ${meta.unit || '-'} • ดึงจาก Firebase RTDB เรียลไทม์`;
+
+      const ctx = document.getElementById('mainHeroChart').getContext('2d');
+      const grad = ctx.createLinearGradient(0, 0, 0, 250);
+      grad.addColorStop(0, meta.color + '40');
+      grad.addColorStop(1, meta.color + '00');
+
+      const colData = telemetryHistory[activeChartField] || [];
+      const latestVal = colData.length > 0 ? colData[colData.length - 1] : '--';
+
+      const canvasEl = document.getElementById('mainHeroChart');
+      if (canvasEl) {
+        canvasEl.setAttribute('aria-label', `กราฟเส้นแสดงแนวโน้ม ${meta.label} (${activeChartField}) ค่าล่าสุด ${latestVal} ${meta.unit || ''}`);
+      }
+
+      mainHeroChart.data.labels = [...telemetryHistory.labels];
+      mainHeroChart.data.datasets = [{
+        label: `${meta.label} (${meta.unit})`,
+        data: [...colData],
+        borderColor: meta.color,
+        borderWidth: 2.8,
+        backgroundColor: grad,
+        fill: true,
+        tension: 0.42,
+        pointRadius: 3.5,
+        pointBackgroundColor: meta.color,
+        pointBorderColor: isDark ? '#0e1426' : '#ffffff',
+        pointBorderWidth: 2,
+        pointHoverRadius: 6
+      }];
+      mainHeroChart.update('none');
+    }
+
+    // ==========================================================================
+    // TIME & COMFORT UTILS
+    // ==========================================================================
+    function formatTimeLabel(date) { return date.toLocaleTimeString('th-TH', { hour12: false }); }
+
+    function formatFullThaiDate(date) {
+      const d = String(date.getDate()).padStart(2, '0');
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const y = date.getFullYear() + 543;
+      const hh = String(date.getHours()).padStart(2, '0');
+      const mm = String(date.getMinutes()).padStart(2, '0');
+      const ss = String(date.getSeconds()).padStart(2, '0');
+      return `${d}/${m}/${y} ${hh}:${mm}:${ss}`;
+    }
+
+    function calculateDynamicComfort(data) {
+      let score = 90;
+      let notes = [];
+
+      // Check temp
+      if (data.temp !== undefined) {
+        const t = parseFloat(data.temp);
+        if (t < 22) { score -= (22 - t) * 4; notes.push("อากาศค่อนข้างเย็น"); }
+        else if (t > 28) { score -= (t - 28) * 4; notes.push("อากาศค่อนข้างร้อน"); }
+      }
+      // Check humi
+      if (data.humi !== undefined) {
+        const h = parseFloat(data.humi);
+        if (h < 40) { score -= (40 - h) * 1.5; notes.push("ความชื้นต่ำ"); }
+        else if (h > 70) { score -= (h - 70) * 1.5; notes.push("ความชื้นสูง"); }
+      }
+      // Check pm25
+      if (data.pm25 !== undefined) {
+        const pm = parseFloat(data.pm25);
+        if (pm > 37.5) { score -= (pm - 37.5) * 1.2; notes.push("ฝุ่นละอองสูง"); }
+      }
+
+      score = Math.max(10, Math.min(100, Math.round(score)));
+
+      let state = "สมบูรณ์แบบ (Optimal)";
+      let desc = "สภาวะแวดล้อมโดยรวมอยู่ในเกณฑ์ยอดเยี่ยม";
+      if (score < 60) {
+        state = "ต้องปรับปรุง (Poor)";
+        desc = notes.join(" • ") || "ค่าตรวจวัดหลายตัวอยู่นอกเกณฑ์มาตรฐาน";
+      } else if (score < 80) {
+        state = "ปานกลาง (Fair)";
+        desc = notes.join(" • ") || "สภาพแวดล้อมพอใช้ได้";
+      }
+
+      document.getElementById('comfortScoreVal').textContent = `${score}%`;
+      document.getElementById('comfortStateLabel').textContent = state;
+      document.getElementById('comfortSubText').textContent = desc;
+
+      const ring = document.getElementById('comfortRingBar');
+      if (ring) {
+        const circ = 213.6;
+        ring.style.strokeDashoffset = circ - (score / 100) * circ;
+      }
+    }
+
+    // ==========================================================================
+    // PROCESS INCOMING TELEMETRY (DYNAMIC 6+ COLS)
+    // ==========================================================================
+    // ==========================================================================
+    // SHOW WAITING STATE (When waiting for ESP32)
+    // ==========================================================================
+    function showWaitingState() {
+      const grid = document.getElementById("metricsDynamicGrid");
+      grid.innerHTML = `
+        <div class="empty-waiting-card" id="emptyWaitingCard">
+          <div class="empty-icon-pulse">
+            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          </div>
+          <h4>⏳ กำลังรอรับข้อมูลจริงจาก ESP32</h4>
+          <p>
+            ระบบกำลังเชื่อมต่อและรอแพ็กเกจข้อมูลเซนเซอร์จริงจากบอร์ด ESP32 ผ่าน Firebase Realtime Database (<code>${config.nodePath}/latest</code>) ทันทีที่บอร์ดส่งค่าเข้ามา แดชบอร์ดจะตรวจจับคอลัมน์อัตโนมัติและแสดงผลทันที
+          </p>
+          <div class="empty-actions-row">
+            <button class="btn-chic" onclick="manualSync()">
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                <path d="M3 3v5h5"/>
+                <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+                <path d="M16 21h5v-5"/>
+              </svg>
+              ตรวจสอบการรับข้อมูลจาก Firebase เดี๋ยวนี้
+            </button>
+          </div>
+        </div>
+      `;
+      document.getElementById("detectedColCount").textContent = "0 คอลัมน์";
+      const statusEl = document.getElementById("connectionStatus");
+      const statusText = document.getElementById("connectionText");
+      statusEl.className = "chic-status-pill connected";
+      statusText.textContent = "WAITING • รอข้อมูลจาก ESP32";
+      document.getElementById("lastUpdatedTime").textContent = formatFullThaiDate(new Date());
+      document.getElementById("elapsedText").innerHTML = '<span class="relative-dot"></span> กำลังรอข้อมูลจาก ESP32...';
+      document.getElementById("comfortScoreVal").textContent = "--%";
+      document.getElementById("comfortStateLabel").textContent = "กำลังรอข้อมูล...";
+      document.getElementById("comfortSubText").textContent = "รอค่าตรวจวัดจาก ESP32";
+      if (mainHeroChart) {
+        mainHeroChart.data.labels = [];
+        mainHeroChart.data.datasets = [];
+        mainHeroChart.update();
+      }
+      document.getElementById("chartSegmentTabs").innerHTML = "";
+    }
+
+    // ==========================================================================
+    // CLEAR FIREBASE NODE (To reset and wait for new ESP32 data)
+    // ==========================================================================
+    async function clearFirebaseData() {
+      if (!confirm("คุณต้องการล้างข้อมูลล่าสุดบน Firebase เพื่อให้แดชบอร์ดเริ่มรอรับค่าสดใหม่จาก ESP32 หรือไม่?")) return;
+      try {
+        await fetch(`${config.databaseUrl}${config.nodePath}/latest.json`, { method: "DELETE" });
+        lastPacketTimestamp = null;
+        lastDataSignature = null;
+        lastDataTimestamp = null;
+        discoveredColumns = [];
+        prevData = {};
+        minMax = {};
+        telemetryHistory = { labels: [] };
+        showWaitingState();
+        closeConfigModal();
+        showToast("ล้างข้อมูลแล้ว แดชบอร์ดกำลังรอข้อมูลจริงจาก ESP32");
+      } catch (e) {
+        console.error("Clear error:", e);
+        showToast("เกิดข้อผิดพลาดในการล้างข้อมูล");
+      }
+    }
+
+    // ==========================================================================
+    // PROCESS INCOMING TELEMETRY (ONLY UPDATES ON GENUINE NEW PACKETS)
+    // ==========================================================================
+    function processIncomingData(data, isInitial = false) {
+      if (!data || typeof data !== 'object') return;
+
+      const keys = Object.keys(data).filter(k => k !== "timestamp" && !isNaN(parseFloat(data[k])));
+      if (keys.length === 0) return;
+
+      // Extract packet timestamp (from ESP32 SNTP)
+      let packetDate;
+      if (data.timestamp) {
+        const ts = Number(data.timestamp);
+        packetDate = new Date(ts > 10000000000 ? ts : ts * 1000);
+      } else {
+        packetDate = new Date();
+      }
+
+      // Check if this packet is actually new from ESP32
+      const currentPacketTs = data.timestamp ? Number(data.timestamp) : null;
+      const currentSignature = JSON.stringify(data);
+
+      const isNewPacket = isInitial || (lastDataSignature === null) ||
+        (currentPacketTs !== null ? currentPacketTs !== lastPacketTimestamp : currentSignature !== lastDataSignature);
+
+      // If data from ESP32 has NOT changed, do not treat it as a new reading!
+      if (!isNewPacket) {
+        const statusEl = document.getElementById("connectionStatus");
+        const statusText = document.getElementById("connectionText");
+        statusEl.className = "chic-status-pill connected";
+        statusText.textContent = `LIVE • รอข้อมูลชุดใหม่จาก ESP32 (${keys.length} คอลัมน์)`;
+        return;
+      }
+
+      // Record tracking signature
+      lastPacketTimestamp = currentPacketTs;
+      lastDataSignature = currentSignature;
+      lastDataTimestamp = packetDate;
+
+      // Ensure cards and tabs exist
+      ensureDynamicCards(keys);
+
+      // Connection Status
+      const statusEl = document.getElementById("connectionStatus");
+      const statusText = document.getElementById("connectionText");
+      statusEl.className = "chic-status-pill connected";
+      statusText.textContent = `LIVE • ได้รับข้อมูลแล้ว (${keys.length} คอลัมน์)`;
+
+      // Device Info
+      document.getElementById("headerDeviceLabel").textContent = config.nodePath;
+      document.getElementById("devicePathDisplay").textContent = `${config.nodePath}/latest`;
+
+      // Loop through each column
+      keys.forEach((key, i) => {
+        const val = parseFloat(data[key]);
+        const meta = getMetaForField(key, i);
+
+        // Min/Max
+        if (!minMax[key]) minMax[key] = { min: Infinity, max: -Infinity };
+        minMax[key].min = Math.min(minMax[key].min, val);
+        minMax[key].max = Math.max(minMax[key].max, val);
+
+        // Update value with pop animation
+        const valEl = document.getElementById(`val_${key}`);
+        if (valEl) {
+          valEl.classList.add("updating");
+          valEl.textContent = val % 1 === 0 ? val.toFixed(0) : val.toFixed(1);
+          setTimeout(() => valEl.classList.remove("updating"), 300);
+        }
+
+        // Delta
+        const deltaEl = document.getElementById(`delta_${key}`);
+        if (deltaEl) {
+          const prev = prevData[key];
+          if (prev === undefined || prev === null || isInitial) {
+            deltaEl.className = "chic-delta-badge neutral";
+            deltaEl.textContent = "-";
+          } else {
+            const diff = val - prev;
+            if (Math.abs(diff) < 0.01) {
+              deltaEl.className = "chic-delta-badge neutral";
+              deltaEl.textContent = "0.00";
+            } else if (diff > 0) {
+              deltaEl.className = "chic-delta-badge up";
+              deltaEl.textContent = `▲ +${diff.toFixed(1)}`;
+            } else {
+              deltaEl.className = "chic-delta-badge down";
+              deltaEl.textContent = `▼ ${diff.toFixed(1)}`;
+            }
+          }
+        }
+
+        // Condition text
+        const condEl = document.getElementById(`cond_${key}`);
+        if (condEl) condEl.textContent = getConditionText(key, val);
+
+        // Spectrum bar
+        const specEl = document.getElementById(`spectrum_${key}`);
+        if (specEl) {
+          const range = meta.max - meta.min;
+          const pct = Math.max(0, Math.min(100, ((val - meta.min) / (range || 1)) * 100));
+          specEl.style.width = `${pct}%`;
+        }
+
+        // Min/Max text
+        const minmaxEl = document.getElementById(`minmax_${key}`);
+        if (minmaxEl) {
+          minmaxEl.textContent = `MIN ${minMax[key].min.toFixed(1)} • MAX ${minMax[key].max.toFixed(1)}`;
+        }
+
+        // History
+        if (!telemetryHistory[key]) telemetryHistory[key] = [];
+        telemetryHistory[key].push(val);
+        if (telemetryHistory[key].length > MAX_POINTS) telemetryHistory[key].shift();
+      });
+
+      // History labels using packet's time
+      const timeStr = formatTimeLabel(packetDate);
+      telemetryHistory.labels.push(timeStr);
+      if (telemetryHistory.labels.length > MAX_POINTS) telemetryHistory.labels.shift();
+
+      // Sync active chart
+      syncHeroChart();
+
+      // Calculate comfort
+      calculateDynamicComfort(data);
+
+      prevData = { ...data };
+    }
+
+    // ==========================================================================
+    // LIVE REAL-TIME CLOCK & ELAPSED COUNTER (เวลาเดินตามเวลาจริงตลอด ทุกวินาที)
+    // ==========================================================================
+    function updateElapsedCounter() {
+      // 1. นาฬิกาเดินตามเวลาจริงต่อเนื่องตลอดเวลา (Real-time Live Clock)
+      const clockEl = document.getElementById("lastUpdatedTime");
+      if (clockEl) {
+        clockEl.textContent = formatFullThaiDate(new Date());
+      }
+
+      // 2. สถานะเวลารับแพ็กเกจล่าสุดจาก ESP32
+      const elapsedEl = document.getElementById("elapsedText");
+      if (!lastDataTimestamp) {
+        elapsedEl.innerHTML = '<span class="relative-dot"></span> กำลังรอรับข้อมูลจาก ESP32...';
+        return;
+      }
+      const seconds = Math.floor((new Date() - lastDataTimestamp) / 1000);
+      const packetTime = formatTimeLabel(lastDataTimestamp);
+      if (seconds < 3) {
+        elapsedEl.innerHTML = `<span class="relative-dot"></span> ข้อมูลสดใหม่จาก ESP32 เมื่อสักครู่ (${packetTime})`;
+      } else if (seconds < 60) {
+        elapsedEl.innerHTML = `<span class="relative-dot"></span> ข้อมูลจาก ESP32 เมื่อ ${seconds} วินาทีที่แล้ว (${packetTime})`;
+      } else if (seconds < 3600) {
+        const mins = Math.floor(seconds / 60);
+        elapsedEl.innerHTML = `<span class="relative-dot"></span> ข้อมูลจาก ESP32 เมื่อ ${mins} นาทีที่แล้ว (${packetTime})`;
+      } else {
+        const hrs = Math.floor(seconds / 3600);
+        elapsedEl.innerHTML = `<span class="relative-dot"></span> ข้อมูลจาก ESP32 เมื่อ ${hrs} ชั่วโมงที่แล้ว (${packetTime})`;
+      }
+    }
+
+    // ==========================================================================
+    // FIREBASE FETCH
+    // ==========================================================================
+    async function fetchLatestData(isInitial = false) {
+      const url = `${config.databaseUrl}${config.nodePath}/latest.json`;
+      try {
+        const response = await fetch(url, { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+          processIncomingData(data, isInitial);
+        } else {
+          showWaitingState();
+        }
+      } catch (err) {
+        console.warn("Fetch error:", err);
+        const statusEl = document.getElementById("connectionStatus");
+        const statusText = document.getElementById("connectionText");
+        statusEl.className = "chic-status-pill disconnected";
+        statusText.textContent = "ขาดการเชื่อมต่อ (ตรวจสอบ URL/Rules)";
+      }
+    }
+
+    async function loadRecentHistory() {
+      const historyUrl = `${config.databaseUrl}${config.nodePath}/history.json?orderBy="$key"&limitToLast=15`;
+      try {
+        const res = await fetch(historyUrl);
+        if (res.ok) {
+          const hist = await res.json();
+          if (hist && typeof hist === 'object') {
+            const records = Object.values(hist).filter(r => r && typeof r === 'object');
+            if (records.length > 0) {
+              const sample = records[records.length - 1];
+              const keys = Object.keys(sample).filter(k => k !== "timestamp" && !isNaN(parseFloat(sample[k])));
+              if (keys.length > 0) {
+                ensureDynamicCards(keys);
+                telemetryHistory = { labels: [] };
+                keys.forEach(k => telemetryHistory[k] = []);
+
+                records.forEach(rec => {
+                  const ts = rec.timestamp ? Number(rec.timestamp) : null;
+                  const d = ts ? new Date(ts > 10000000000 ? ts : ts * 1000) : new Date();
+                  telemetryHistory.labels.push(formatTimeLabel(d));
+                  keys.forEach(k => {
+                    const val = parseFloat(rec[k]) || 0;
+                    telemetryHistory[k].push(val);
+                    if (!minMax[k]) minMax[k] = { min: Infinity, max: -Infinity };
+                    minMax[k].min = Math.min(minMax[k].min, val);
+                    minMax[k].max = Math.max(minMax[k].max, val);
+                  });
+                });
+                syncHeroChart();
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.log("History prefetch skipped", e);
+      }
+    }
+
+    function manualSync() {
+      const btn = document.getElementById("btnSyncNow");
+      btn.classList.add("spinning");
+      fetchLatestData(false).finally(() => {
+        setTimeout(() => btn.classList.remove("spinning"), 800);
+        showToast("ตรวจสอบข้อมูลล่าสุดจาก Firebase แล้ว");
+      });
+    }
+
+    // ==========================================================================
+    // INIT CONNECTION & APP START
+    // ==========================================================================
+    function initConnection() {
+      clearInterval(pollInterval);
+      document.getElementById("headerDeviceLabel").textContent = config.nodePath;
+      document.getElementById("devicePathDisplay").textContent = `${config.nodePath}/latest`;
+
+      loadRecentHistory().then(() => fetchLatestData(true));
+      pollInterval = setInterval(() => fetchLatestData(false), 3500);
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      initTheme();
+      loadSavedConfig();
+      initHeroChart();
+      updateElapsedCounter();
+      initConnection();
+      timerInterval = setInterval(updateElapsedCounter, 1000);
+    });
+  </script>
+</body>
+</html>

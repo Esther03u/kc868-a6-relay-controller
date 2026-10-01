@@ -1,0 +1,192 @@
+# ==============================================================================
+# ESPHome Configuration - Firebase Realtime Database IoT (Level 5)
+# โครงการส่งข้อมูล IoT จำลองเซ็นเซอร์ (6 คอลัมน์ขั้นต่ำ ตามข้อกำหนด) ไปยัง Firebase RTDB
+# และจัดเก็บทั้ง /lab/esp32/latest (PUT) และ /lab/esp32/history (POST)
+#
+# เซ็นเซอร์ทั้ง 6 คอลัมน์ (นศ. สามารถปรับเปลี่ยนช่วงค่าหรือชื่อคอลัมน์ได้):
+# 1. temp     : อุณหภูมิอากาศ (°C)
+# 2. humi     : ความชื้นสัมพัทธ์ (%)
+# 3. light    : ความเข้มแสง (lx)
+# 4. soil     : ความชื้นในดิน (Soil Moisture %)
+# 5. pm25     : ค่าฝุ่นละออง PM2.5 (µg/m³)
+# 6. pressure : ความกดอากาศ (hPa)
+# + timestamp : เวลามาตรฐาน Unix Timestamp (จาก SNTP)
+# ==============================================================================
+
+esphome:
+  name: firebase-l5
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+logger:
+
+# กำหนด Wi-Fi โดยใช้ secret หรือระบุ ssid/password โดยตรง
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  power_save_mode: none
+
+  on_connect:
+    then:
+      - logger.log: "=== WIFI CONNECTED ==="
+
+  on_disconnect:
+    then:
+      - logger.log: "=== WIFI DISCONNECTED ==="
+
+# ซิงโครไนซ์เวลาจาก Internet ด้วย SNTP สำหรับ Unix timestamp
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: Asia/Bangkok
+    on_time_sync:
+      then:
+        - logger.log: "=== TIME SYNCHRONIZED ==="
+
+# เปิดคอมโพเนนต์ HTTP Request
+http_request:
+  timeout: 10s
+
+# ==============================================================================
+# เซ็นเซอร์จำลอง 6 คอลัมน์ (Template Sensors พร้อม random_float)
+# ==============================================================================
+sensor:
+  # คอลัมน์ที่ 1 - อุณหภูมิ: 25.0 - 36.0 °C
+  - platform: template
+    id: temp
+    name: "Temp"
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    update_interval: 5s
+    lambda: |-
+      return 25.0 + random_float() * 11.0;
+
+  # คอลัมน์ที่ 2 - ความชื้นสัมพัทธ์: 45.0 - 85.0 %
+  - platform: template
+    id: humi
+    name: "Humi"
+    unit_of_measurement: "%"
+    accuracy_decimals: 1
+    update_interval: 5s
+    lambda: |-
+      return 45.0 + random_float() * 40.0;
+
+  # คอลัมน์ที่ 3 - ความเข้มแสง: 150 - 1500 lx
+  - platform: template
+    id: light
+    name: "Light"
+    unit_of_measurement: "lx"
+    accuracy_decimals: 0
+    update_interval: 5s
+    lambda: |-
+      return 150.0 + random_float() * 1350.0;
+
+  # คอลัมน์ที่ 4 - ความชื้นในดิน (Soil Moisture): 25.0 - 80.0 %
+  - platform: template
+    id: soil
+    name: "Soil Moisture"
+    unit_of_measurement: "%"
+    accuracy_decimals: 1
+    update_interval: 5s
+    lambda: |-
+      return 25.0 + random_float() * 55.0;
+
+  # คอลัมน์ที่ 5 - ฝุ่นละออง PM2.5: 8.0 - 65.0 µg/m³
+  - platform: template
+    id: pm25
+    name: "PM2.5"
+    unit_of_measurement: "µg/m³"
+    accuracy_decimals: 1
+    update_interval: 5s
+    lambda: |-
+      return 8.0 + random_float() * 57.0;
+
+  # คอลัมน์ที่ 6 - ความกดอากาศ: 1005.0 - 1018.0 hPa
+  - platform: template
+    id: pressure
+    name: "Atmospheric Pressure"
+    unit_of_measurement: "hPa"
+    accuracy_decimals: 1
+    update_interval: 5s
+    lambda: |-
+      return 1005.0 + random_float() * 13.0;
+
+# วงรอบการส่งข้อมูลขึ้น Cloud ทุกๆ 10 วินาที
+interval:
+  - interval: 10s
+    then:
+      - if:
+          condition:
+            and:
+              - wifi.connected
+              - lambda: |-
+                  return id(sntp_time).now().is_valid();
+
+          then:
+            - logger.log:
+                format: "Send 6-Cols: temp=%.1f humi=%.1f light=%.0f soil=%.1f pm25=%.1f press=%.1f"
+                args:
+                  - id(temp).state
+                  - id(humi).state
+                  - id(light).state
+                  - id(soil).state
+                  - id(pm25).state
+                  - id(pressure).state
+
+            # ==============================================================
+            # 1. PUT -> /latest (บันทึกทับข้อมูลปัจจุบัน 6 คอลัมน์ สำหรับ Dashboard)
+            # ==============================================================
+            - http_request.send:
+                method: PUT
+                url: "https://iot-128-default-rtdb.asia-southeast1.firebasedatabase.app/lab/esp32/latest.json"
+                request_headers:
+                  Content-Type: application/json
+                json: |-
+                  root["temp"] = id(temp).state;
+                  root["humi"] = id(humi).state;
+                  root["light"] = id(light).state;
+                  root["soil"] = id(soil).state;
+                  root["pm25"] = id(pm25).state;
+                  root["pressure"] = id(pressure).state;
+                  root["timestamp"] = id(sntp_time).now().timestamp;
+                on_response:
+                  then:
+                    - logger.log:
+                        format: "Latest (6 cols) HTTP status = %d"
+                        args:
+                          - response->status_code
+                on_error:
+                  then:
+                    - logger.log: "Latest upload failed"
+
+            # ==============================================================
+            # 2. POST -> /history (เพิ่ม record ใหม่ 6 คอลัมน์ สำหรับประวัติย้อนหลัง)
+            # ==============================================================
+            - http_request.send:
+                method: POST
+                url: "https://iot-128-default-rtdb.asia-southeast1.firebasedatabase.app/lab/esp32/history.json"
+                request_headers:
+                  Content-Type: application/json
+                json: |-
+                  root["temp"] = id(temp).state;
+                  root["humi"] = id(humi).state;
+                  root["light"] = id(light).state;
+                  root["soil"] = id(soil).state;
+                  root["pm25"] = id(pm25).state;
+                  root["pressure"] = id(pressure).state;
+                  root["timestamp"] = id(sntp_time).now().timestamp;
+                on_response:
+                  then:
+                    - logger.log:
+                        format: "History (6 cols) HTTP status = %d"
+                        args:
+                          - response->status_code
+                on_error:
+                  then:
+                    - logger.log: "History upload failed"
+
+          else:
+            - logger.log: "Skip Firebase: WiFi or time not ready"

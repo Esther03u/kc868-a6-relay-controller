@@ -2,7 +2,7 @@
 // instantly and is installable ("Add to Home Screen") as a mobile app.
 // It intentionally does NOT cache MQTT traffic (that's WebSocket, not fetch).
 
-const CACHE = "kc868-a6-dashboard-v4";
+const CACHE = "kc868-a6-dashboard-v7";
 const ASSETS = ["./", "./index.html", "./manifest.json", "./icon.svg"];
 
 self.addEventListener("install", (event) => {

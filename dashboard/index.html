@@ -109,6 +109,16 @@
   }
 
   .header-actions { display: flex; align-items: center; gap: 10px; }
+  .clock-badge {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+  }
   #conn {
     font-family: var(--font-mono);
     font-size: 11px;
@@ -416,6 +426,7 @@
     </div>
   </div>
   <div class="header-actions">
+    <span id="clock" class="clock-badge" title="เวลาปัจจุบัน (Asia/Bangkok) — โซนเดียวกับที่บอร์ดใช้ตั้งเวลา">--:--:--</span>
     <span id="conn">Disconnected</span>
     <button id="settings-toggle" class="icon-btn" aria-label="Broker settings" aria-expanded="false">⚙</button>
   </div>
@@ -468,6 +479,19 @@ const STATE_RE = {
 
 const grid = document.getElementById("grid");
 const connEl = document.getElementById("conn");
+const clockEl = document.getElementById("clock");
+const clockFmt = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Asia/Bangkok",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: false,
+});
+function tickClock() {
+  clockEl.textContent = clockFmt.format(new Date());
+}
+tickClock();
+setInterval(tickClock, 1000);
 const settingsPanel = document.getElementById("settings-panel");
 const settingsToggle = document.getElementById("settings-toggle");
 const settingsClose = document.getElementById("settings-close");
