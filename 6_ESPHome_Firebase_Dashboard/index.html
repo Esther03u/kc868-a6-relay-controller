@@ -1190,6 +1190,190 @@
       box-shadow: 0 6px 22px rgba(99, 102, 241, 0.55);
     }
 
+    /* ==========================================================================
+       METRIC HISTORY MODAL & INTERACTIVE CARD STYLES
+       ========================================================================== */
+    .metric-hero-card {
+      cursor: pointer;
+      user-select: none;
+    }
+    .metric-hero-card:focus-visible {
+      outline: 2px solid var(--primary-accent);
+      outline-offset: 3px;
+    }
+    .card-history-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-dim);
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+      background: rgba(99, 102, 241, 0.08);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      transition: all 0.25s ease;
+    }
+    .metric-hero-card:hover .card-history-badge {
+      color: #ffffff;
+      background: var(--card-accent, #6366f1);
+      border-color: var(--card-accent, #6366f1);
+      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.35);
+    }
+
+    .history-modal-card {
+      max-width: 840px;
+      width: 95%;
+      max-height: 90vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 26px;
+    }
+    .modal-subtitle-text {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .modal-metric-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--card-soft, rgba(99, 102, 241, 0.12));
+      border: 1px solid var(--card-border, rgba(99, 102, 241, 0.25));
+      color: var(--card-accent, #6366f1);
+      flex-shrink: 0;
+    }
+    .modal-metric-icon svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .history-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+    }
+    .hist-stat-box {
+      background: var(--bg-base);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: border-color 0.2s ease;
+    }
+    .hist-stat-box:hover {
+      border-color: var(--panel-border-hover);
+    }
+    .hist-stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .hist-stat-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .text-cyan { color: #06b6d4 !important; }
+    .text-rose { color: #f43f5e !important; }
+    .text-amber { color: #f59e0b !important; }
+    .text-indigo { color: #6366f1 !important; }
+    .text-emerald { color: #10b981 !important; }
+
+    .history-chart-wrapper {
+      background: var(--bg-base);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      height: 230px;
+      position: relative;
+    }
+    .history-chart-canvas-box {
+      position: relative;
+      height: 100%;
+      width: 100%;
+    }
+
+    .history-table-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .history-table-header-bar h4 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-sub);
+    }
+    .history-table-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: var(--radius-sm);
+    }
+    .history-table-scroll-container {
+      max-height: 220px;
+      overflow-y: auto;
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius-md);
+      background: var(--bg-base);
+    }
+    .history-data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 12px;
+    }
+    .history-data-table th {
+      background: var(--panel-bg-solid);
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 10px 14px;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      border-bottom: 1px solid var(--panel-border);
+      font-family: 'Plus Jakarta Sans', 'Sarabun', sans-serif;
+    }
+    .history-data-table td {
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--panel-border);
+      color: var(--text-main);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+    }
+    .history-data-table tr:hover td {
+      background: rgba(99, 102, 241, 0.05);
+    }
+    .unit-dim {
+      font-size: 10.5px;
+      color: var(--text-dim);
+      margin-left: 2px;
+    }
+    .empty-table-msg {
+      text-align: center;
+      padding: 28px !important;
+      color: var(--text-dim);
+      font-family: 'Plus Jakarta Sans', 'Sarabun', sans-serif !important;
+      font-size: 13px !important;
+    }
+
     /* Toast */
     .toast-capsule {
       position: fixed;
@@ -1462,7 +1646,7 @@
             <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
           </svg>
         </div>
-        <h4>⏳ กำลังรอรับข้อมูลจริงจาก ESP32</h4>
+        <h4>กำลังรอรับข้อมูลจริงจาก ESP32</h4>
         <p>
           ระบบกำลังเชื่อมต่อและรอแพ็กเกจข้อมูลเซนเซอร์จริงจากบอร์ด ESP32 ผ่าน Firebase Realtime Database (<code>/lab/esp32/latest</code>) ทันทีที่บอร์ดส่งค่าเข้ามา แดชบอร์ดจะตรวจจับคอลัมน์อัตโนมัติและแสดงผลทันที
         </p>
@@ -1563,7 +1747,7 @@
       <!-- Student Lab Guide Accordion -->
       <details class="student-guide-details">
         <summary class="student-guide-summary">
-          <span>📚 ข้อกำหนดเซนเซอร์ นศ. (ขั้นต่ำ 6 คอลัมน์)</span>
+          <span>คู่มือข้อกำหนดเซนเซอร์ (ขั้นต่ำ 6 คอลัมน์)</span>
           <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
         </summary>
         <div class="student-guide-content">
@@ -1577,16 +1761,118 @@
   "pressure": 1012.3, // ความกดอากาศ (hPa)
   "timestamp": 1740000000
 }</code></pre>
-          <p class="guide-note">✨ ระบบตรวจจับคอลัมน์อัตโนมัติ (Auto-discovery) สร้างการ์ดและกราฟให้อัตโนมัติทันที</p>
+          <p class="guide-note">ระบบตรวจจับคอลัมน์อัตโนมัติ (Auto-discovery) สร้างการ์ดและกราฟให้อัตโนมัติทันที</p>
         </div>
       </details>
 
       <div class="modal-btn-row">
         <button class="btn-chic" onclick="clearFirebaseData()" style="margin-right: auto; color: #f87171; border-color: rgba(239, 68, 68, 0.3);" title="ลบข้อมูลล่าสุดบน Firebase เพื่อให้หน้าเว็บเริ่มรอรับข้อมูลใหม่จาก ESP32">
-          🧹 ล้างค่ารอ ESP32 ใหม่
+          ล้างค่าเพื่อรอ ESP32 ใหม่
         </button>
         <button class="btn-chic" onclick="closeConfigModal()">ยกเลิก</button>
         <button class="btn-save-conn" onclick="saveConfiguration()">บันทึกและเชื่อมต่อ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Metric History Viewer Dialog Modal -->
+  <div class="modal-backdrop-overlay" id="historyModal" role="dialog" aria-modal="true" aria-labelledby="historyModalTitle">
+    <div class="modal-glass-card history-modal-card">
+      <div class="modal-top-bar">
+        <div class="modal-icon-title">
+          <div class="modal-metric-icon" id="histModalIcon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+          </div>
+          <div>
+            <div class="modal-title-text" id="historyModalTitle">ประวัติข้อมูลเซนเซอร์</div>
+            <p class="modal-subtitle-text" id="historyModalSubtitle">ประวัติบันทึกย้อนหลังแบบเรียลไทม์จาก ESP32</p>
+          </div>
+        </div>
+        <button class="btn-close-modal" onclick="closeHistoryModal()" aria-label="ปิดหน้าต่างประวัติ" title="ปิด">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Quick Stats Summary Grid -->
+      <div class="history-stats-grid">
+        <div class="hist-stat-box">
+          <span class="hist-stat-label">ค่าล่าสุด</span>
+          <span class="hist-stat-val text-indigo" id="histStatCurrent">--</span>
+        </div>
+        <div class="hist-stat-box">
+          <span class="hist-stat-label">ค่าต่ำสุด (MIN)</span>
+          <span class="hist-stat-val text-cyan" id="histStatMin">--</span>
+        </div>
+        <div class="hist-stat-box">
+          <span class="hist-stat-label">ค่าสูงสุด (MAX)</span>
+          <span class="hist-stat-val text-rose" id="histStatMax">--</span>
+        </div>
+        <div class="hist-stat-box">
+          <span class="hist-stat-label">ค่าเฉลี่ย (AVG)</span>
+          <span class="hist-stat-val text-amber" id="histStatAvg">--</span>
+        </div>
+        <div class="hist-stat-box">
+          <span class="hist-stat-label">จำนวนข้อมูลที่บันทึก</span>
+          <span class="hist-stat-val text-emerald" id="histStatCount">0 จุด</span>
+        </div>
+      </div>
+
+      <!-- Interactive Detailed Chart -->
+      <div class="history-chart-wrapper">
+        <div class="history-chart-canvas-box">
+          <canvas id="historyModalChart" role="img" aria-label="กราฟประวัติข้อมูลเซนเซอร์"></canvas>
+        </div>
+      </div>
+
+      <!-- History Log Table Header & Actions -->
+      <div class="history-table-header-bar">
+        <h4>ตารางบันทึกค่าประวัติย้อนหลัง (<span id="histTableCountBadge">0 รายการ</span>)</h4>
+        <div class="history-table-actions">
+          <button class="btn-chic btn-sm" onclick="exportHistoryCSV()" title="ส่งออกเป็นไฟล์ CSV">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            ส่งออก CSV
+          </button>
+          <button class="btn-chic btn-sm" onclick="copyHistoryJSON()" title="คัดลอกข้อมูลแบบ JSON">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            คัดลอก JSON
+          </button>
+        </div>
+      </div>
+
+      <!-- Scrollable History Table -->
+      <div class="history-table-scroll-container">
+        <table class="history-data-table">
+          <thead>
+            <tr>
+              <th style="width: 10%;">ลำดับ</th>
+              <th style="width: 32%;">เวลาที่บันทึก</th>
+              <th style="width: 20%;">ค่าที่วัดได้</th>
+              <th style="width: 20%;">การเปลี่ยนแปลง</th>
+              <th style="width: 18%;">การประเมิน</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody">
+            <tr>
+              <td colspan="5" class="empty-table-msg">ยังไม่มีประวัติบันทึกสำหรับเซนเซอร์นี้ (กำลังรอรับข้อมูลจาก ESP32)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="modal-btn-row">
+        <button class="btn-chic" onclick="closeHistoryModal()">ปิดหน้าต่าง</button>
       </div>
     </div>
   </div>
@@ -1711,13 +1997,19 @@
 
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
-        const modal = document.getElementById("configModal");
-        if (modal && modal.classList.contains("active")) closeConfigModal();
+        const cfgModal = document.getElementById("configModal");
+        if (cfgModal && cfgModal.classList.contains("active")) closeConfigModal();
+        const histModal = document.getElementById("historyModal");
+        if (histModal && histModal.classList.contains("active")) closeHistoryModal();
       }
     });
 
     document.getElementById("configModal").addEventListener("click", (e) => {
       if (e.target.id === "configModal") closeConfigModal();
+    });
+
+    document.getElementById("historyModal").addEventListener("click", (e) => {
+      if (e.target.id === "historyModal") closeHistoryModal();
     });
 
     // ==========================================================================
@@ -1786,36 +2078,36 @@
 
     function getConditionText(key, val) {
       if (key.includes("temp")) {
-        if (val < 20) return "❄️ หนาวเย็น";
-        if (val <= 28) return "🍃 สบายตัว";
-        if (val <= 34) return "🌤️ อบอุ่น";
-        return "🔥 อากาศร้อน";
+        if (val < 20) return "หนาวเย็น";
+        if (val <= 28) return "สบายตัว";
+        if (val <= 34) return "อบอุ่น";
+        return "อากาศร้อน";
       }
       if (key.includes("humi")) {
-        if (val < 40) return "🌵 อากาศแห้ง";
-        if (val <= 70) return "💧 ชุ่มชื้นดี";
-        return "🌧️ ชื้นสูง";
+        if (val < 40) return "อากาศแห้ง";
+        if (val <= 70) return "ชุ่มชื้นดี";
+        return "ชื้นสูง";
       }
       if (key.includes("light") || key.includes("lux")) {
-        if (val < 100) return "🌙 แสงสลัว";
-        if (val <= 600) return "⛅ สว่างพอดี";
-        return "☀️ สว่างสดใส";
+        if (val < 100) return "แสงสลัว";
+        if (val <= 600) return "สว่างพอดี";
+        return "สว่างสดใส";
       }
       if (key.includes("soil")) {
-        if (val < 30) return "🍂 ดินแห้ง";
-        if (val <= 70) return "🌿 ชุ่มชื้นดี";
-        return "🌊 ดินแฉะมาก";
+        if (val < 30) return "ดินแห้ง";
+        if (val <= 70) return "ชุ่มชื้นดี";
+        return "ดินแฉะมาก";
       }
       if (key.includes("pm")) {
-        if (val <= 15) return "🍃 อากาศดีมาก";
-        if (val <= 37.5) return "🌤️ ปานกลาง";
-        return "🚨 เกินมาตรฐาน";
+        if (val <= 15) return "อากาศดีมาก";
+        if (val <= 37.5) return "ปานกลาง";
+        return "เกินมาตรฐาน";
       }
       if (key.includes("press")) {
-        if (val < 1008) return "🌀 ความกดต่ำ";
-        return "🧭 ความกดอากาศปกติ";
+        if (val < 1008) return "ความกดต่ำ";
+        return "ความกดอากาศปกติ";
       }
-      return "📊 ปกติ";
+      return "ปกติ";
     }
 
     function getMetaForField(key, index) {
@@ -1847,6 +2139,9 @@
     let prevData = {};
     let minMax = {};
     let telemetryHistory = { labels: [] };
+    let detailedRecords = [];
+    let currentHistoryKey = null;
+    let modalChartInstance = null;
     let lastDataTimestamp = null;
     let lastPacketTimestamp = null;
     let lastDataSignature = null;
@@ -1884,6 +2179,17 @@
         const card = document.createElement("div");
         card.className = "metric-hero-card";
         card.id = `card_${colKey}`;
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('title', `กดเพื่อดูประวัติข้อมูล ${meta.label} (${colKey})`);
+        card.setAttribute('aria-label', `ดูประวัติข้อมูล ${meta.label}`);
+        card.onclick = () => openHistoryModal(colKey);
+        card.onkeydown = (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openHistoryModal(colKey);
+          }
+        };
         card.style.setProperty("--card-accent", meta.color);
         card.style.setProperty("--card-soft", meta.color + "18");
         card.style.setProperty("--card-border", meta.color + "40");
@@ -1923,7 +2229,12 @@
           </div>
 
           <div class="metric-footer-tier">
-            <span>ช่วงสถิติ</span>
+            <span class="card-history-badge">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              กดดูประวัติ
+            </span>
             <span class="minmax-stats" id="minmax_${colKey}">MIN -- • MAX --</span>
           </div>
         `;
@@ -2095,6 +2406,249 @@
     }
 
     // ==========================================================================
+    // METRIC HISTORY VIEWER ENGINE (DRILL-DOWN & TABLE)
+    // ==========================================================================
+    function openHistoryModal(colKey) {
+      if (!colKey) return;
+      currentHistoryKey = colKey;
+      const idx = discoveredColumns.indexOf(colKey);
+      const meta = getMetaForField(colKey, idx >= 0 ? idx : 0);
+
+      // Select that tab in dashboard hero chart as well
+      selectChartTab(colKey);
+
+      // Set Header info
+      document.getElementById('historyModalTitle').textContent = `ประวัติข้อมูล: ${meta.label} (${colKey})`;
+      document.getElementById('historyModalSubtitle').textContent = `หน่วยวัด: ${meta.unit || '-'} | ช่วงสถิติปกติ: ${meta.min} - ${meta.max} ${meta.unit || ''}`;
+
+      const iconEl = document.getElementById('histModalIcon');
+      if (iconEl) {
+        iconEl.innerHTML = getSensorSvg(meta.icon);
+        iconEl.style.color = meta.color;
+        iconEl.style.background = meta.color + "18";
+        iconEl.style.borderColor = meta.color + "40";
+      }
+
+      // Populate Quick Stats and Table
+      renderHistoryTableAndStats(colKey, meta);
+
+      // Render Modal Chart
+      renderHistoryModalChart(colKey, meta);
+
+      // Open Modal
+      const modal = document.getElementById('historyModal');
+      if (modal) modal.classList.add('active');
+    }
+
+    function closeHistoryModal() {
+      const modal = document.getElementById('historyModal');
+      if (modal) modal.classList.remove('active');
+      if (modalChartInstance) {
+        modalChartInstance.destroy();
+        modalChartInstance = null;
+      }
+    }
+
+    function renderHistoryTableAndStats(colKey, meta) {
+      const points = [];
+      detailedRecords.forEach(rec => {
+        if (rec.values && rec.values[colKey] !== undefined && rec.values[colKey] !== null) {
+          const num = parseFloat(rec.values[colKey]);
+          if (!isNaN(num)) {
+            points.push({
+              time: rec.timeStr,
+              fullTime: rec.fullTimeStr,
+              val: num,
+              ts: rec.timestamp
+            });
+          }
+        }
+      });
+
+      const count = points.length;
+      document.getElementById('histStatCount').textContent = `${count} จุด`;
+      document.getElementById('histTableCountBadge').textContent = `${count} รายการ`;
+
+      if (count === 0) {
+        document.getElementById('histStatCurrent').textContent = '--';
+        document.getElementById('histStatMin').textContent = '--';
+        document.getElementById('histStatMax').textContent = '--';
+        document.getElementById('histStatAvg').textContent = '--';
+        document.getElementById('historyTableBody').innerHTML = `
+          <tr>
+            <td colspan="5" class="empty-table-msg">ยังไม่มีประวัติบันทึกสำหรับเซนเซอร์นี้ (กำลังรอรับข้อมูลจาก ESP32)</td>
+          </tr>
+        `;
+        return;
+      }
+
+      const vals = points.map(p => p.val);
+      const currentVal = vals[0];
+      const minVal = Math.min(...vals);
+      const maxVal = Math.max(...vals);
+      const avgVal = vals.reduce((a, b) => a + b, 0) / count;
+
+      document.getElementById('histStatCurrent').textContent = `${currentVal.toFixed(1)} ${meta.unit || ''}`;
+      document.getElementById('histStatMin').textContent = `${minVal.toFixed(1)} ${meta.unit || ''}`;
+      document.getElementById('histStatMax').textContent = `${maxVal.toFixed(1)} ${meta.unit || ''}`;
+      document.getElementById('histStatAvg').textContent = `${avgVal.toFixed(1)} ${meta.unit || ''}`;
+
+      // Build Table Rows (latest first, up to 50 rows)
+      let tableHtml = '';
+      points.slice(0, 50).forEach((pt, index) => {
+        let deltaHtml = '<span class="chic-delta-badge neutral">-</span>';
+        if (index < points.length - 1) {
+          const olderVal = points[index + 1].val;
+          const diff = pt.val - olderVal;
+          if (Math.abs(diff) < 0.01) {
+            deltaHtml = '<span class="chic-delta-badge neutral">0.0</span>';
+          } else if (diff > 0) {
+            deltaHtml = `<span class="chic-delta-badge up">+${diff.toFixed(1)}</span>`;
+          } else {
+            deltaHtml = `<span class="chic-delta-badge down">${diff.toFixed(1)}</span>`;
+          }
+        }
+
+        const condition = getConditionText(colKey, pt.val);
+
+        tableHtml += `
+          <tr>
+            <td>#${index + 1}</td>
+            <td>${pt.fullTime}</td>
+            <td><strong>${pt.val.toFixed(1)}</strong> <span class="unit-dim">${meta.unit || ''}</span></td>
+            <td>${deltaHtml}</td>
+            <td><span class="condition-pill">${condition}</span></td>
+          </tr>
+        `;
+      });
+
+      document.getElementById('historyTableBody').innerHTML = tableHtml;
+    }
+
+    function renderHistoryModalChart(colKey, meta) {
+      if (modalChartInstance) {
+        modalChartInstance.destroy();
+        modalChartInstance = null;
+      }
+
+      const canvas = document.getElementById('historyModalChart');
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+      // Gather points in chronological order (oldest to newest)
+      const points = [];
+      for (let i = detailedRecords.length - 1; i >= 0; i--) {
+        const rec = detailedRecords[i];
+        if (rec.values && rec.values[colKey] !== undefined) {
+          const num = parseFloat(rec.values[colKey]);
+          if (!isNaN(num)) {
+            points.push({ time: rec.timeStr, val: num });
+          }
+        }
+      }
+
+      const labels = points.map(p => p.time);
+      const data = points.map(p => p.val);
+
+      const grad = ctx.createLinearGradient(0, 0, 0, 200);
+      grad.addColorStop(0, meta.color + '55');
+      grad.addColorStop(1, meta.color + '00');
+
+      const chartOptions = getChartCommonOptions(isDark);
+      modalChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: `${meta.label} (${meta.unit || ''})`,
+            data: data,
+            borderColor: meta.color,
+            backgroundColor: grad,
+            borderWidth: 2.5,
+            pointBackgroundColor: meta.color,
+            pointBorderColor: isDark ? '#0e1426' : '#ffffff',
+            pointBorderWidth: 1.5,
+            pointRadius: data.length > 20 ? 3 : 4,
+            pointHoverRadius: 6,
+            fill: true,
+            tension: 0.35
+          }]
+        },
+        options: {
+          ...chartOptions,
+          plugins: {
+            ...chartOptions.plugins,
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    function exportHistoryCSV() {
+      if (!currentHistoryKey) return;
+      const idx = discoveredColumns.indexOf(currentHistoryKey);
+      const meta = getMetaForField(currentHistoryKey, idx >= 0 ? idx : 0);
+
+      const points = [];
+      detailedRecords.forEach(rec => {
+        if (rec.values && rec.values[currentHistoryKey] !== undefined) {
+          const num = parseFloat(rec.values[currentHistoryKey]);
+          if (!isNaN(num)) {
+            points.push({ fullTime: rec.fullTimeStr, val: num });
+          }
+        }
+      });
+
+      if (points.length === 0) {
+        showToast("ยังไม่มีข้อมูลประวัติสำหรับส่งออก");
+        return;
+      }
+
+      let csv = "\uFEFFลำดับ,วันที่และเวลา,ค่าที่วัดได้,หน่วยวัด,สถานะ\n";
+      points.forEach((pt, i) => {
+        const cond = getConditionText(currentHistoryKey, pt.val);
+        csv += `${i + 1},"${pt.fullTime}",${pt.val.toFixed(2)},"${meta.unit || ''}","${cond}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `telemetry_${currentHistoryKey}_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast(`ส่งออกประวัติ ${meta.label} เป็นไฟล์ CSV สำเร็จแล้ว`);
+    }
+
+    function copyHistoryJSON() {
+      if (!currentHistoryKey) return;
+      const points = [];
+      detailedRecords.forEach(rec => {
+        if (rec.values && rec.values[currentHistoryKey] !== undefined) {
+          const num = parseFloat(rec.values[currentHistoryKey]);
+          if (!isNaN(num)) {
+            points.push({ timestamp: rec.fullTimeStr, value: num });
+          }
+        }
+      });
+
+      if (points.length === 0) {
+        showToast("ยังไม่มีข้อมูลประวัติสำหรับคัดลอก");
+        return;
+      }
+
+      navigator.clipboard.writeText(JSON.stringify(points, null, 2)).then(() => {
+        showToast(`คัดลอก JSON ประวัติ (${points.length} รายการ) แล้ว`);
+      }).catch(() => {
+        showToast("ไม่สามารถคัดลอกข้อมูลได้");
+      });
+    }
+
+    // ==========================================================================
     // TIME & COMFORT UTILS
     // ==========================================================================
     function formatTimeLabel(date) { return date.toLocaleTimeString('th-TH', { hour12: false }); }
@@ -2169,7 +2723,7 @@
               <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
             </svg>
           </div>
-          <h4>⏳ กำลังรอรับข้อมูลจริงจาก ESP32</h4>
+          <h4>กำลังรอรับข้อมูลจริงจาก ESP32</h4>
           <p>
             ระบบกำลังเชื่อมต่อและรอแพ็กเกจข้อมูลเซนเซอร์จริงจากบอร์ด ESP32 ผ่าน Firebase Realtime Database (<code>${config.nodePath}/latest</code>) ทันทีที่บอร์ดส่งค่าเข้ามา แดชบอร์ดจะตรวจจับคอลัมน์อัตโนมัติและแสดงผลทันที
           </p>
@@ -2218,6 +2772,8 @@
         prevData = {};
         minMax = {};
         telemetryHistory = { labels: [] };
+        detailedRecords = [];
+        closeHistoryModal();
         showWaitingState();
         closeConfigModal();
         showToast("ล้างข้อมูลแล้ว แดชบอร์ดกำลังรอข้อมูลจริงจาก ESP32");
@@ -2311,10 +2867,10 @@
               deltaEl.textContent = "0.00";
             } else if (diff > 0) {
               deltaEl.className = "chic-delta-badge up";
-              deltaEl.textContent = `▲ +${diff.toFixed(1)}`;
+              deltaEl.textContent = `+${diff.toFixed(1)}`;
             } else {
               deltaEl.className = "chic-delta-badge down";
-              deltaEl.textContent = `▼ ${diff.toFixed(1)}`;
+              deltaEl.textContent = `${diff.toFixed(1)}`;
             }
           }
         }
@@ -2347,6 +2903,23 @@
       const timeStr = formatTimeLabel(packetDate);
       telemetryHistory.labels.push(timeStr);
       if (telemetryHistory.labels.length > MAX_POINTS) telemetryHistory.labels.shift();
+
+      // Add to detailed historical records for drill-down modal & export
+      detailedRecords.unshift({
+        timestamp: packetDate,
+        timeStr: formatTimeLabel(packetDate),
+        fullTimeStr: formatFullThaiDate(packetDate),
+        values: { ...data }
+      });
+      if (detailedRecords.length > 80) detailedRecords.pop();
+
+      // If history modal is currently active, live-refresh it
+      if (currentHistoryKey && document.getElementById('historyModal') && document.getElementById('historyModal').classList.contains('active')) {
+        const hIdx = discoveredColumns.indexOf(currentHistoryKey);
+        const hMeta = getMetaForField(currentHistoryKey, hIdx >= 0 ? hIdx : 0);
+        renderHistoryTableAndStats(currentHistoryKey, hMeta);
+        renderHistoryModalChart(currentHistoryKey, hMeta);
+      }
 
       // Sync active chart
       syncHeroChart();
@@ -2412,7 +2985,7 @@
     }
 
     async function loadRecentHistory() {
-      const historyUrl = `${config.databaseUrl}${config.nodePath}/history.json?orderBy="$key"&limitToLast=15`;
+      const historyUrl = `${config.databaseUrl}${config.nodePath}/history.json?orderBy="$key"&limitToLast=30`;
       try {
         const res = await fetch(historyUrl);
         if (res.ok) {
@@ -2425,12 +2998,19 @@
               if (keys.length > 0) {
                 ensureDynamicCards(keys);
                 telemetryHistory = { labels: [] };
+                detailedRecords = [];
                 keys.forEach(k => telemetryHistory[k] = []);
 
                 records.forEach(rec => {
                   const ts = rec.timestamp ? Number(rec.timestamp) : null;
                   const d = ts ? new Date(ts > 10000000000 ? ts : ts * 1000) : new Date();
                   telemetryHistory.labels.push(formatTimeLabel(d));
+                  detailedRecords.unshift({
+                    timestamp: d,
+                    timeStr: formatTimeLabel(d),
+                    fullTimeStr: formatFullThaiDate(d),
+                    values: { ...rec }
+                  });
                   keys.forEach(k => {
                     const val = parseFloat(rec[k]) || 0;
                     telemetryHistory[k].push(val);
