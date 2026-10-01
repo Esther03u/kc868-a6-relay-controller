@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th" data-theme="dark">
+<html lang="th" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -1372,7 +1372,7 @@
         <!-- Theme Toggle Button -->
         <button class="btn-chic btn-icon-only" onclick="toggleTheme()" id="themeToggleBtn" title="สลับโหมด สีสว่าง/สีมืด" aria-label="สลับโหมดสี สว่างหรือมืด">
           <svg id="themeIcon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
           </svg>
         </button>
       </div>
@@ -1607,16 +1607,14 @@
       const saved = localStorage.getItem('esp32_chic_theme');
       if (saved) {
         document.documentElement.setAttribute('data-theme', saved);
-      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-        document.documentElement.setAttribute('data-theme', 'light');
       } else {
-        document.documentElement.setAttribute('data-theme', 'dark');
+        document.documentElement.setAttribute('data-theme', 'light');
       }
       updateThemeIcon();
     }
 
     function toggleTheme() {
-      const current = document.documentElement.getAttribute('data-theme') || 'dark';
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
       const next = current === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', next);
       localStorage.setItem('esp32_chic_theme', next);
